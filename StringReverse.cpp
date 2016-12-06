@@ -1,8 +1,5 @@
 // problem: implement a void reverse(char* str) to reverse a null terminated string
 
-// solution: --
-
-// reading a text file
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
