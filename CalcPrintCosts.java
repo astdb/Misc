@@ -1,5 +1,5 @@
 
-// CalcPrintCosts accepts a list of print jobs from an input file and calculates the cost of each job according to a given price list. each job has a total number of pages, number of colour pages and whether printing is double sided. 
+// CalcPrintCosts accepts a list of print jobs from an input file and calculates the cost of each job according to a given price list. each job has a total number of pages, number of colour pages and an indicator of whether printing is double-sided. 
 
 import java.util.*;
 import java.io.*;
@@ -9,7 +9,7 @@ public class CalcPrintCosts {
         // read print jobs input file name from command line 
         String filename = readInputfileName(args);
 
-        // read input data from input file
+        // read input data from file
         Scanner fileinput = null;
         try {
 			fileinput = new Scanner(new File(filename));
@@ -22,12 +22,13 @@ public class CalcPrintCosts {
 
         // iterate through the print jobs
         while( fileinput.hasNextLine() ) {
-            // read print job
+            // read print job on file
             String this_row = fileinput.nextLine().trim();
 
-            if(validInputJob(this_row)){
+            if(validInputJob(this_row)) {
                 // split job string into individual components
                 String[] currentPrintJob = this_row.split(",");
+
                 long totalPages = Long.parseLong(currentPrintJob[0].trim());
                 long totalColor = Long.parseLong(currentPrintJob[1].trim());
                 String sidedNess = currentPrintJob[2].trim();
@@ -43,7 +44,7 @@ public class CalcPrintCosts {
         }
 
         // print total cost
-        System.out.println(formattedPrice(totalPrintCost));
+        System.out.println("\n-------------------\nTotal cost of all print jobs: " + formattedPrice(totalPrintCost) + "\n");
         return;        
     }
 
@@ -66,7 +67,7 @@ public class CalcPrintCosts {
 
         if(currentPrintJobRaw.length != 3) {
             // valid job row required to have three fields i.e. [total pages, color pages, single/double-sided]
-            System.out.println("Row doesn't split into three components");
+            System.out.println("Row doesn't split into three components - ensure the job field consists of total and color page numbers plus the sided-flag, comma-separated.");
             return false;
         }
 
@@ -80,7 +81,7 @@ public class CalcPrintCosts {
             total_color = Long.parseLong(currentPrintJobRaw[1].trim());
 
         } catch (NumberFormatException e) {
-            System.out.println("Exception formatting page numbers into longs");
+            System.out.println("Exception formatting page numbers into longs - ensure total and color page counts are valid, positive numbers.");
             return false;
         }
 
@@ -88,7 +89,7 @@ public class CalcPrintCosts {
         // --------- check page counts
         // page numbers must be positive and number of color pages must be same or less than total pages
         if( (total_pages <= 0) || (total_color < 0) || (total_color > total_pages) ) {
-            System.out.println("Page numbers mismatch");
+            System.out.println("Page numbers mismatch - ensure page numbers are positive and color page count is >= total page count.");
             return false;
         }
 
@@ -96,7 +97,7 @@ public class CalcPrintCosts {
         String sided_ness = currentPrintJobRaw[2].trim();
 
         if( !(sided_ness.equalsIgnoreCase("true") || sided_ness.equalsIgnoreCase("false")) ) {
-            System.out.println("Sided-ness error");
+            System.out.println("Double-sided indicator must be 'true' or 'false'.");
             return false;
         }
 
