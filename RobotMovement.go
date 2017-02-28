@@ -1,33 +1,37 @@
-// This program simulates actions of a toy robot on to 5x5 tabletop according to a set of given commands.
+// This program simulates actions of a toy robot on to 5x5 tabletop, operating according to a set of given commands.
 
 package main
 
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
 )
 
 func main() {
-	// ensure input filename entered on command line
+	// ensure input commands filename entered on command line
 	if len(os.Args) <= 1 {
 		fmt.Println("Error: please enter the robot operations command file name on command-line (e.g. > go run RobotMovement.go commands.txt)")
 		return
 	}
 
-	// read commands file
+	// capture input file name from command line
 	inFileName := os.Args[1]
 	file, err := os.Open(inFileName)
-	logErr(err)
+
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error reading input file: %v\n", err)
+		return
+	}
+
 	defer file.Close()
 
-	// setup scanner for commands file input
+	// setup scanner to read commands input file
 	scanner := bufio.NewScanner(file)
 
-	// create new robot
+	// create new robot 🤖 
 	c_3PO := createRobot()
 
 	// iterate through the commands
@@ -35,37 +39,42 @@ func main() {
 		line := strings.TrimSpace(scanner.Text())
 
 		if line != "" {
-			// line_split will contain a slice of strings when the current line is 'exploded' by the comma delimiter
+			// split the command string by whitespace delimiter to obtain command name (and if applicable any arguments)
 			line_split := strings.Split(line, " ")
-
 			command := strings.TrimSpace(line_split[0])
 
 			if command == "PLACE" {
-				place_coords := strings.Split(line_split[1], ",")
+				if len(line_split) == 2 {
+					// if command is PLACE and there are arguments provided, split arguments substring by comma delimiter to obtain placement coordinates and initial facing
+					place_coords := strings.Split(line_split[1], ",")
 
-				// parse x-coordinate of placement command
-				place_x, err := strconv.Atoi(strings.TrimSpace(place_coords[0]))
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Placement X-coord argument error: %v\n", err)
-					continue
+					if len(place_coords) == 3 {
+						// consider PLACE arguments if three are provided (x, y, facing direction)
+
+						// parse x-coordinate of placement command - must be a valid number
+						place_x, err := strconv.Atoi(strings.TrimSpace(place_coords[0]))
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "Placement X-coord argument error: %v\n", err)
+							continue
+						}
+
+						// parse x-coordinate of placement command - must be a valid number
+						place_y, err := strconv.Atoi(strings.TrimSpace(place_coords[1]))
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "Placement Y-coord argument error: %v\n", err)
+							continue
+						}
+
+						// parse facing alignment of placement command
+						place_facing := strings.TrimSpace(place_coords[2])
+
+						// place robot and capture any placement error
+						err = c_3PO.place(place_x, place_y, place_facing)
+						if err != nil {
+							fmt.Fprintf(os.Stderr, "Placement error: %v\n", err)
+						}
+					}
 				}
-
-				// parse x-coordinate of placement command
-				place_y, err := strconv.Atoi(strings.TrimSpace(place_coords[1]))
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Placement Y-coord argument error: %v\n", err)
-					continue
-				}
-
-				// parse facing alignment of placement command
-				place_facing := strings.TrimSpace(place_coords[2])
-
-				// place robot and capture any placement error
-				err = c_3PO.place(place_x, place_y, place_facing)
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "Placement error: %v\n", err)
-				}
-
 			}
 
 			if command == "MOVE" {
@@ -100,7 +109,7 @@ func main() {
 					continue
 				}
 
-				fmt.Printf("%d, %d, %s\n", current_x, current_y, current_facing)
+				fmt.Printf("%d,%d,%s\n", current_x, current_y, current_facing)
 			}
 		}
 	}
@@ -120,8 +129,7 @@ type robot struct {
 	YLIMIT int
 }
 
-// maker function create and return a reference to a robot instance
-// func createRobot(x int, y int, facing string) *robot {
+// maker function to create and return a reference to a robot instance
 func createRobot() *robot {
 	var r robot
 	r.X = 0
@@ -136,7 +144,7 @@ func createRobot() *robot {
 	return &r
 }
 
-// ----------- methods of robot type (place, move, left, right, report) -----------
+// ----------- Methods of robot type (place, move, left, right, report) -----------
 func (r *robot) place(x int, y int, facing string) error {
 	if x >= 0 && x <= r.XLIMIT && y >= 0 && y <= r.YLIMIT && (facing == "NORTH" || facing == "EAST" || facing == "SOUTH" || facing == "WEST") {
 		r.X = x
@@ -150,10 +158,10 @@ func (r *robot) place(x int, y int, facing string) error {
 }
 
 func (r *robot) move() error {
-	// move robot one unit in the facing direction, with regards to table limitations
+	// move robot one unit in the facing direction, with regards to table limitations and returns an error if fails to do so
 	if !r.Placed {
 		// if robot not placed on table, ignore move command
-		return fmt.Errorf("move() called on unplaced robot .")
+		return fmt.Errorf("move() called on unplaced robot.")
 	}
 
 	if r.F == "NORTH" && r.Y < r.YLIMIT {
@@ -180,15 +188,16 @@ func (r *robot) move() error {
 		return nil
 	}
 
-	return fmt.Errorf("move() called on robot with possibly undefined initial facing (X: %d, Y: %d, FACING: %s)", r.X, r.Y, r.F)
+	// if program execution reaches this point it would mean that the robot was placed on table but has a facing of neither defined value (NORTH, EAST, SOUTH or WEST) - return error
+	return fmt.Errorf("move() called on robot with undefined initial facing or facing towards edge of table (X: %d, Y: %d, FACING: %s)", r.X, r.Y, r.F)
 }
 
 func (r *robot) left() error {
-	// rotate robot 90degrees counter-clockwise
+	// rotate robot 90degrees counter-clockwise and returns an error if failed to do so
 
 	if !r.Placed {
 		// if robot not placed on table, ignore left command
-		return fmt.Errorf("left() called on unplaced robot .")
+		return fmt.Errorf("left() called on unplaced robot.")
 	}
 
 	if r.F == "NORTH" {
@@ -211,15 +220,16 @@ func (r *robot) left() error {
 		return nil
 	}
 
+	// if program execution reaches this point it would mean that the robot was placed on table but has a facing of neither defined value (NORTH, EAST, SOUTH or WEST) - return error
 	return fmt.Errorf("left() called on robot with possibly undefined initial facing (X: %d, Y: %d, FACING: %s)", r.X, r.Y, r.F)
 }
 
 func (r *robot) right() error {
-	// rotate robot 90degrees clockwise
+	// rotate robot 90degrees clockwise and returns an error if filed to do so
 
 	if !r.Placed {
 		// if robot not placed on table, ignore right command
-		return fmt.Errorf("left() called on unplaced robot .")
+		return fmt.Errorf("right() called on unplaced robot.")
 	}
 
 	if r.F == "NORTH" {
@@ -242,11 +252,12 @@ func (r *robot) right() error {
 		return nil
 	}
 
+	// if program execution reaches this point it would mean that the robot was placed on table but has a facing of neither defined value (NORTH, EAST, SOUTH or WEST) - return error
 	return fmt.Errorf("right() called on robot with possibly undefined initial facing (X: %d, Y: %d, FACING: %s)", r.X, r.Y, r.F)
 }
 
 func (r *robot) report() (int, int, string, error) {
-	// fmt.Printf("X: %d, Y: %d, Facing: %s", r.X, r.Y, r.F);
+	// reports the robot's location along with an error if unplaced
 	var err error
 	err = nil
 	if !r.Placed {
@@ -255,14 +266,6 @@ func (r *robot) report() (int, int, string, error) {
 	}
 
 	return r.X, r.Y, r.F, err
-	// return
 }
 
 // ----------------- end methods of robot type ----------------------
-
-// utility function to evaluate and log errors encountered throughout program execution
-func logErr(e error) {
-	if e != nil {
-		log.Fatal(e)
-	}
-}
