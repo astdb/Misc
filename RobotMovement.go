@@ -31,7 +31,7 @@ func main() {
 	// setup scanner to read commands input file
 	scanner := bufio.NewScanner(file)
 
-	// create new robot 🤖 
+	// create new robot 🤖
 	c_3PO := createRobot()
 
 	// iterate through the commands
@@ -154,7 +154,7 @@ func (r *robot) place(x int, y int, facing string) error {
 		return nil
 	}
 
-	return fmt.Errorf("Robot placement attempted with invalid initial coordinates (X: %d, Y: %d, FACING: %s)", r.X, r.Y, r.F)
+	return fmt.Errorf("Robot placement attempted with invalid coordinates (X: %d, Y: %d, FACING: %s)", x, y, facing)
 }
 
 func (r *robot) move() error {
