@@ -7,16 +7,18 @@ import (
 )
 
 func main() {
-	testcases := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, -1, -2}
+	testcases := []int{-1, -2, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30}
 
-	for k, v := range testcases {
-		nfac, err := factorial(v)
+	// for k, v := range testcases {
+	for _, v := range testcases {
+		// nfac, err := factorial(v)
 
-		if err == nil {
-			fmt.Printf("Testcase %d\n\tn = %d\n\tn! = %d\n\tZeroes: %d\n", k, v, nfac, trailingZeroes(nfac))
-		} else {
-			fmt.Printf("Testcase %d\n\tn = %d\n\tn! = %v\n", k, v, err)
-		}
+		// if err == nil {
+		// 	fmt.Printf("Testcase %d\n\tn = %d\n\tn! = %d\n\tZeroes: %d\n", k, v, nfac, trailingZeroes(nfac))
+		// } else {
+		// 	fmt.Printf("Testcase %d\n\tn = %d\n\tn! = %v\n", k, v, err)
+		// }
+		fmt.Printf("%d! has %d trailing zeroes.\n", v, countFactorialZeroes(v))
 	}
 }
 
@@ -51,4 +53,30 @@ func trailingZeroes(n int) int {
 	}
 
 	return zeroes
+}
+
+// ------------- method without calculating n! ----------------------
+func factorOfFive(i int) int {
+	count := 0
+
+	 for i % 5 == 0 {
+		 count++
+		 i /= 5
+	 }
+
+	 return count
+}
+
+func countFactorialZeroes(n int) int {
+	count := 0
+
+	if n < 0 {
+		return -1
+	}
+
+	for i := 5; n/i > 0; i *= 5 {
+		count += n/i
+	}
+
+	return count
 }
