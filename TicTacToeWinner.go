@@ -30,21 +30,51 @@ func main() {
 
 	_game.markX(1,0)
 	_game.print()
+	if _game.winner(1,0){
+		fmt.Println("X wins!")
+	} else {
+		fmt.Println("No winner yet..")
+	}
 
 	_game.markY(1,1)
 	_game.print()
+	if _game.winner(1,1){
+		fmt.Println("Y wins!")
+	} else {
+		fmt.Println("No winner yet..")
+	}
 
 	_game.markX(0,2)
 	_game.print()
+	if _game.winner(0,2){
+		fmt.Println("X wins!")
+	} else {
+		fmt.Println("No winner yet..")
+	}
 
 	_game.markY(0,0)
 	_game.print()
+	if _game.winner(0,0){
+		fmt.Println("Y wins!")
+	} else {
+		fmt.Println("No winner yet..")
+	}
 
 	_game.markX(2,1)
 	_game.print()
+	if _game.winner(2,1){
+		fmt.Println("X wins!")
+	} else {
+		fmt.Println("No winner yet..")
+	}
 
 	_game.markY(2,2)
 	_game.print()
+	if _game.winner(2,2){
+		fmt.Println("Y wins!")
+	} else {
+		fmt.Println("No winner yet..")
+	}
 
 	// game_over := false
 	// i := 0	// simple alternatig flag indicating if an X or O should be placed
@@ -119,6 +149,7 @@ func (b *ttt_board) markY(loc_x, loc_y int) {
 
 // print board to console
 func (b *ttt_board) print() {
+	fmt.Printf("-------------------\n")
 	for _, row := range b.board {
 		for _, col := range row {
 			// fmt.Printf("  %d", col)
@@ -141,7 +172,7 @@ func (b *ttt_board) print() {
 }
 
 // determine winner
-func (b *ttt_board) ttt_winner(loc_x, loc_y int) bool {
+func (b *ttt_board) winner(loc_x, loc_y int) bool {
 	// when the maximum number of X's or O's are placed, this function will be called
 	// with the coordinates of the last placed X or O to determine if that was a winning
 	// mark.
