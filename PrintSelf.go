@@ -38,7 +38,8 @@ func main() {
 	// read each line and print it out
 	for scanner.Scan() {
 		// read line
-		line := strings.TrimSpace(scanner.Text())
+		// line := strings.TrimSpace(scanner.Text())	// do not trimspace if output has to have indenting
+		line := scanner.Text()
 		fmt.Printf("%s\n", line)
 	}
 }
