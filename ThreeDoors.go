@@ -1,8 +1,8 @@
 // program to check if you actually get better odds by changing doors if shown one to be empty
-// backstory: the popular riddle goes as that at a game show you're shown three doors, behind one 
-// there's an expensive gift - the others are empty. once you select a door, the host opens one of the 
-// remaining doors and shows that it's empty, and gives you a chance to revise your choice - 
-// do you stick with your original selection or do you swap? 
+// backstory: the popular riddle goes as that at a game show you're shown three doors, behind one
+// there's an expensive gift - the others are empty. once you select a door, the host opens one of the
+// remaining doors and shows that it's empty, and gives you a chance to revise your choice -
+// do you stick with your original selection or do you swap?
 
 package main
 
@@ -12,33 +12,34 @@ import (
 )
 
 func main() {
-	totalRuns := 0.0
-	totalWins := 0.0
-	change := true
+	totalRuns := 0.0 // number of total selections
+	totalWins := 0.0 // number of total wins by contestant
+	change := false  // flag denoting whether contestant changes selection upon empty door reveal or not
 
+	// run through some number of game shows
 	for i := 0; i < 10000; i++ {
 		totalRuns++
 
-		// initialize three doors with a gift behind one 
-		doors := []int{0, 0, 0}	// doors are slice indexes 0, 1, and 2 - gift will be changed to 1
-		giftIndex := rand.Intn(3)
-		doors[giftIndex] = 1
+		// initialize three doors with a gift behind one
+		doors := []int{0, 0, 0} // doors are slice indexes 0, 1, and 2 - gift will be changed to 1
+		doors[rand.Intn(3)] = 1 // gift placed behind random door
 
-		// contestant selects a door 
+		// contestant selects a door
 		contestantChoice := rand.Intn(3)
 
-		// host demonstrates the empty door from the remaining
+		// host demonstrates the empty door from the remaining ones
 		empty := demoEmptyDoor(doors, contestantChoice)
 
 		// change or not
 		contestantChoice = changeOrKeep(contestantChoice, empty, change)
 
-		// outcome 
+		// outcome
 		if doors[contestantChoice] == 1 {
 			totalWins++
 		}
 	}
 
+	// calculate odds / output results
 	odds := (totalWins * 100) / totalRuns
 	fmt.Printf("Change: %v\nRuns: %.0f\nWins: %.0f\nOdds: %.2f%%\n", change, totalRuns, totalWins, odds)
 }
@@ -58,9 +59,12 @@ func changeOrKeep(choice int, empty int, change bool) int {
 		return i
 	}
 
+	// dummy int return at end of function to make compiler happy
 	return 10
 }
 
+// given the selection the contestant made and the knowledge of what's behind each door,
+// the host opens an empty door from the remaining two
 func demoEmptyDoor(doors []int, choice int) int {
 	for i := 0; i < 3; i++ {
 		if i == choice {
@@ -72,5 +76,6 @@ func demoEmptyDoor(doors []int, choice int) int {
 		}
 	}
 
+	// dummy int return at end of function to make compiler happy
 	return 10
 }
