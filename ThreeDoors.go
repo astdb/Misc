@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	totalRuns := 0.0 // number of total selections
+	totalRuns := 0.0 // number of total selections (float values to calculate %.2f precise odds later - Go keeps int division int)
 	totalWins := 0.0 // number of total wins by contestant
 	change := false  // flag denoting whether contestant changes selection upon empty door reveal or not
 
