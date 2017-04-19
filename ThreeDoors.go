@@ -1,7 +1,7 @@
 // program to check if you actually get better odds by changing doors if shown one to be empty
 // backstory: the popular riddle goes as that at a game show you're shown three doors, behind one 
-// there's an expensive gift - the others are empty. once you select one, the host opens one of the 
-// remaining doors and shows that its empty, and gives you a chance to revise your choice - 
+// there's an expensive gift - the others are empty. once you select a door, the host opens one of the 
+// remaining doors and shows that it's empty, and gives you a chance to revise your choice - 
 // do you stick with your original selection or do you swap? 
 
 package main
@@ -14,7 +14,7 @@ import (
 func main() {
 	totalRuns := 0.0
 	totalWins := 0.0
-	change := false
+	change := true
 
 	for i := 0; i < 10000; i++ {
 		totalRuns++
@@ -46,7 +46,7 @@ func main() {
 // given contestant's choice, shown empty door, and a flag denoting to change selection or not, return a selection
 // (changed if flag set)
 func changeOrKeep(choice int, empty int, change bool) int {
-	if change {
+	if !change {
 		return choice
 	}
 
