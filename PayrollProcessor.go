@@ -11,7 +11,8 @@ import (
 	"strings"
 )
 
-var TAX_CONFIG = "TAX_CONFIG.csv"
+var TAX_CONFIG_FILE = "TAX_CONFIG.csv"
+var TAX_BRACKETS []*IncomeTaxBracket
 
 func main() {
 	if len(os.Args) <= 1 {
@@ -19,16 +20,20 @@ func main() {
 		return
 	}
 
-	taxBrackets, err := readTaxBracketsConfig(TAX_CONFIG)
+	TAX_BRACKETS, err := readTaxBracketsConfig(TAX_CONFIG_FILE)
 	if err != nil {
 		// error reading tax bracket config - quit
-		fmt.Errorf("Error reading tax brackets config: %v", err)
+		fmt.Printf("Error reading tax brackets config: %v", err)
 		return
+	}
+
+	for _, v := range TAX_BRACKETS {
+		v.Print();
 	}
 
 	payrollRecords, err := readPayrollRecords(os.Args[1])
 	if err != nil {
-		fmt.Errorf("%v", err)
+		fmt.Printf("Error reading payroll records: %v", err)
 	}
 
 	for k, v := range payrollRecords {
@@ -90,6 +95,7 @@ type PayrollRecord struct {
 	PaymentDate  string
 	Valid        bool   //	indicates if the record object is valid
 	ErrorStr     string // if Valid == false, contains the input data from the input file leading to invalid object
+	TaxBrackets  []*IncomeTaxBracket
 }
 
 func (rec *PayrollRecord) fullName() string {
@@ -104,16 +110,63 @@ func (rec *PayrollRecord) grossIncome() float64 {
 	return round(rec.AnnualSalary / 12)
 }
 
-func (rec *PayrollRecord) incomeTax() {
-	
+func (rec *PayrollRecord) incomeTax() (float64, error) {
+	// iterate through tax brackets and find the right tax percentage for this salary
+	perc := 0.0
+	lump := 0.0
+	abv := 0.0
+	set := false
+	for _, brac := range TAX_BRACKETS {
+		if brac.Upper == 0 {
+			// top tax bracket
+			if rec.AnnualSalary >= brac.Lower {
+				perc = brac.Percent
+				lump = brac.Lump
+				abv = brac.Above
+				set = true
+			}
+
+		} else {
+			if rec.AnnualSalary >= brac.Lower && rec.AnnualSalary <= brac.Upper {
+				perc = brac.Percent
+				lump = brac.Lump
+				abv = brac.Above
+				set = true
+			}
+		}
+	}
+
+	if !set {
+		// no fitting bracket found for this salary
+		return -1.0, fmt.Errorf("No fittnig tax bracket was found for salary amount %f", rec.AnnualSalary)
+	}
+
+	percentageTax := ((rec.AnnualSalary - abv) * perc) / 100
+	return round(percentageTax + lump), nil
 }
 
-func (rec *PayrollRecord) netIncome() {
+func (rec *PayrollRecord) netIncome() (float64, error) {
+	gross := rec.grossIncome()
+	tax, err := rec.incomeTax()
 
+	if err != nil {
+		return -1.0, err
+	}
+
+	if tax > gross {
+		return -1.0, fmt.Errorf("Taxed amount (%f) larger than gross income (%f)", tax, gross)
+	}
+
+	return round(gross - tax), nil
 }
 
-func (rec *PayrollRecord) superAmount() {
+func (rec *PayrollRecord) superAmount() (float64, error) {
+	if rec.SuperRate < 0 || rec.SuperRate > 50 {
+		return -1.0, fmt.Errorf("Invalid super rate (%f)", rec.SuperRate)
+	}
 
+	super := (rec.grossIncome() * rec.SuperRate) / 100
+	return round(super), nil
 }
 
 func (rec *PayrollRecord) Print() {
@@ -168,6 +221,39 @@ func round(n float64) float64 {
 	return n_floor
 }
 
+func createOutputFile(inFileName) error {
+	if strings.TrimSpace(inFileName) == "" {
+		return fmt.Errorf("Invalid input filename")
+	}
+
+	outFileName := strings.Split(strings.TrimSpace(inFileName), ".")[0] + "-out.txt"
+	f, err := os.Create(outFileName)
+	
+	if err != nil {
+		return fmt.Errorf("Error creating outputfile")
+	}
+
+	defer f.Close()
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		date := strings.TrimSpace(r1.FindString(line))
+		ext := strings.TrimSpace(r2.FindString(line))
+
+		if len(date) > 0 && len(ext) > 0 {
+			// write line to file
+			_, err := f.WriteString(r1.FindString(line) + "\t" + r2.FindString(line) + "\n")
+			logErr(err)
+		}
+	}
+
+	f.Sync()
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
 // takes a salary amount and returns percentage, lump payment and value above which the percebntage should be calculated
 // func getTaxPercent(sal float64) (float64, float64, float64) {
 // 	taxmap := map[float64]float64{0: 18200, }
@@ -179,6 +265,10 @@ type IncomeTaxBracket struct {
 	Percent float64 // percentage tax to be levied above a certain threshold
 	Lump    float64 // lump sum to be paid for this bracket, if any
 	Above   float64 // threshold above which percentage tax has to be paid
+}
+
+func (itb *IncomeTaxBracket) Print()  {
+	fmt.Printf("[Lower: $%.2f, Upper: $%.2f, Percent: %.2f%%, Lump Sum: $%.2f, Above: $%.2f]\n", itb.Lower, itb.Upper, itb.Percent, itb.Lump, itb.Above)
 }
 
 func readTaxBracketsConfig(inputFile string) ([]*IncomeTaxBracket, error) {
@@ -209,7 +299,7 @@ func readTaxBracketsConfig(inputFile string) ([]*IncomeTaxBracket, error) {
 			return nil, fmt.Errorf("readTaxBrackets(): Minimum number of fields not met in input <%s>\n", row)
 		}
 
-		lower, err_low := strconv.ParseFloat(row[0], 64)
+		lower, err_low := strconv.ParseFloat(strings.TrimSpace(row[0]), 64)
 
 		top := false // flag indicating topmost tax bracket
 		upp := strings.TrimSpace(row[1])
@@ -217,21 +307,22 @@ func readTaxBracketsConfig(inputFile string) ([]*IncomeTaxBracket, error) {
 		var err_upp error
 		if upp != "" {
 			// upper field could be empty if this is the top bracket
-			upper, err_upp = strconv.ParseFloat(row[1], 64)
+			upper, err_upp = strconv.ParseFloat(strings.TrimSpace(row[1]), 64)
 		} else {
 			// set flag indicating uppermost bracket
 			top = true
 		}
 
-		percent, err_perc := strconv.ParseFloat(row[2], 64)
-		lump, err_lump := strconv.ParseFloat(row[3], 64)
-		threshold, err_thr := strconv.ParseFloat(row[4], 64)
+		percent, err_perc := strconv.ParseFloat(strings.TrimSpace(row[2]), 64)
+		lump, err_lump := strconv.ParseFloat(strings.TrimSpace(row[3]), 64)
+		threshold, err_thr := strconv.ParseFloat(strings.TrimSpace(row[4]), 64)
 
 		if err_low != nil || err_upp != nil || err_perc != nil || err_lump != nil || err_thr != nil {
+			fmt.Printf("%v\n", err_thr)
 			return nil, fmt.Errorf("readTaxBrackets(): Error reading tax bracket config record: <%s>\n", row)
 		}
 
-		if lower >= upper {
+		if lower >= upper && !top {
 			return nil, fmt.Errorf("readTaxBrackets(): Lower limit >= upper limit in input <%s>\n", row)
 		}
 
@@ -253,6 +344,10 @@ func readTaxBracketsConfig(inputFile string) ([]*IncomeTaxBracket, error) {
 		if top {
 			break
 		}
+	}
+
+	if i == 0 {
+		return nil, fmt.Errorf("readTaxBrackets(): No valid tax brackets found\n")
 	}
 
 	return brackets, nil
