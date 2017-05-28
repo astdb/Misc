@@ -1,4 +1,4 @@
-// A diving board can be made of any combination of any number of longer and/or shorter planks of wood end-to-end.
+// A diving board can be made of any combination of any number of longer and/or shorter planks of placed wood end-to-end.
 // For a diving board utilizing exactly k number of planks, generate all possible lengths of the final board.
 
 package main
