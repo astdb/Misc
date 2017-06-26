@@ -1,7 +1,7 @@
 
-// find if a given string is a valid shuffle of two other given strings
+import java.util.*;
 
-public class MixedWords {
+public class Q5_MixedWords {
     public static void main(String[] args) {
         if(mixedWords("ab2", "cd", "d2abc").equals("yes")) {
             System.out.println("Pass");
@@ -60,7 +60,6 @@ public class MixedWords {
         char[] input3_charr = sb3.toString().trim().toLowerCase().toCharArray();
 
         if((input1_charr.length + input2_charr.length) != input3_charr.length) {
-            System.out.println("String lengths don't add up.");
             return "no";
         }
 
@@ -71,7 +70,7 @@ public class MixedWords {
             boolean found = false;
             for(int j = 0; j < input1_charr.length; j++) {
                 if(curChar == input1_charr[j]) {
-                    input1_charr[i] = ' ';
+                    input1_charr[j] = ' ';
                     found = true;
                     break;
                 }
@@ -91,7 +90,6 @@ public class MixedWords {
 
             if(!found){
                 // string3 had a character not found in either string1 or string2
-                System.out.println(curChar + " wasn't found in either string.");
                 return "no";
             }
         }
