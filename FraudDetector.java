@@ -12,8 +12,15 @@ public class FraudDetector {
             System.exit(1);
         }
 
-        Long priceThreshold = 10000L;       // in cents
-        String date = "2017-09-12";         // in "yyyy-MM-dd" format
+        String inputFile = args[0];
+        Long priceThreshold = 11000L;       // in cents
+        String date = "2014-04-29";         // in "yyyy-MM-dd" format
+
+        ArrayList<String> suspect_cards_list = filterTransactions(inputFile, date, priceThreshold);
+
+        for (String card: suspect_cards_list) {
+            System.out.println(card);
+        }
         
     }
 
@@ -21,7 +28,6 @@ public class FraudDetector {
     // and returns a list of credit card numbers associated with transactions exceeding the threshold.
     public static ArrayList<String> filterTransactions(String inputFile, String date, long amountThreshold) {
         // read input file
-        // String inputFile = args[0];
         Scanner input = null;
 
         try {
