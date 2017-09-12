@@ -4,6 +4,7 @@
 
 import java.util.*;
 import java.io.*;
+import java.text.*;
 
 public class FraudDetector {
     public static void main(String[] args) {
@@ -13,7 +14,7 @@ public class FraudDetector {
         }
 
         // read input file
-        String inputFile = args[1];
+        String inputFile = args[0];
         Scanner input = null;
 
         try {
@@ -23,8 +24,8 @@ public class FraudDetector {
         }
 
         // declare map to collect creditcards and expense totals
-        // collection will be a set of creditcard numbers mapping to a set of maps, which in turn map dates to totals
-        HashMap<String, HashMap<Integer, Integer>> creditCardTotals = new HashMap<String, HashMap<Integer, Integer>>();
+        // this collection will be a set of creditcard numbers mapping to a set of maps, which in turn map dates to totals
+        HashMap<String, HashMap<Integer, Long>> creditCardTotals = new HashMap<String, HashMap<Integer, Long>>();
         
         // iterate through the transaction input file
         // e.g. 10d7ce2f43e35fa57d1bbf8b1e2, 2014-04-29T13:15:54, 10.00
@@ -35,22 +36,44 @@ public class FraudDetector {
             String[] transactionComponents = transaction.split(",");
 
             if(transactionComponents.length < 3) {
-                // malformed transaction input, move to next
+                // malformed input, move to next
+                System.out.println("Error parsing transaction: " + transaction);
                 continue;
             }
 
-            HashMap<Integer, Integer> cardExists = map.get(transactionComponents[0].trim());
+            String transactionCardHash = transactionComponents[0].trim();
+            String transactionDate = transactionComponents[1].trim();
+            String transactionAmount = transactionComponents[2].trim();
+
+            // check if a record exists for this credit card
+            HashMap<Integer, Integer> cardExists = creditCardTotals.get(transactionCardHash);
 
             if( cardExists != null ) {
-                // card known in this dataset before
+                // card known in this dataset before - check if a total eists for this date and update it
+                
+                // extract day component from input e.g. "2014-04-29" from "2014-04-29T13:15:54"
+                String dayComp = transactionDate.split('T');
+
+                // calculate timestamp for the date
+                try {
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");        
+                    Date date = dateFormat.parse(dayComp);
+                    long time = date.getTime();
+                    // new Timestamp(time);
+                    // System.out.println(time);
+                } catch(ParseException e) {
+                    // malformed input, move to next
+                    System.out.println("Error parsing date: " + dayComp);
+                    continue;
+                }
 
             } else {
-                // new card to this dataset
+                // new card to this dataset - create record
 
             }
         }
 
-        // create list of suspicious credit card numbers
+        // create list of suspicious cards
 
         // return
 
