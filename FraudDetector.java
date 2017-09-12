@@ -21,7 +21,7 @@ public class FraudDetector {
     // and returns a list of credit card numbers associated with transactions exceeding the threshold.
     public static ArrayList<String> filterTransactions(String inputFile, String date, long amountThreshold) {
         // read input file
-        String inputFile = args[0];
+        // String inputFile = args[0];
         Scanner input = null;
 
         try {
@@ -65,8 +65,8 @@ public class FraudDetector {
             Long time = null;
             try {
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");        
-                Date date = dateFormat.parse(dayComp);
-                time = new Long(date.getTime());
+                Date dte = dateFormat.parse(dayComp);
+                time = new Long(dte.getTime());
                 
             } catch(ParseException e) {
                 // malformed input, move to next
@@ -87,9 +87,14 @@ public class FraudDetector {
 
                 if(totalExists != null) {
                     // a count is known for this card for this date - update                   
-                    // Long newTot = totalExists + amt;
+                    Long newTot = cardExists.get(time) + amt;
 
-                    cardExists.put(time, cardExists.get(time) + amt);
+                    if(newTot > amountThreshold) {
+                        if(!suspectCards.contains(transactionCardHash)){
+                            suspectCards.add(transactionCardHash);
+                        }
+                    }
+                    cardExists.put(time, newTot);
                 } else {
                     // no count for this card for this date, add
                     cardExists.put(time, amt);
@@ -97,8 +102,15 @@ public class FraudDetector {
 
             } else {
                 // new card to this dataset - create record
+                if(amt > amountThreshold) {
+                    if(!suspectCards.contains(transactionCardHash)){
+                        suspectCards.add(transactionCardHash);
+                    }
+                }
+
                 HashMap<Long, Long> thisAmount = new HashMap<Long, Long>();
-                thisAmount.put(time, amt);
+                thisAmount.put(time, amt);                
+
                 creditCardTotals.put(transactionCardHash, thisAmount);
             }
         }
