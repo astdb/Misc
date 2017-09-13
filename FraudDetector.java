@@ -16,7 +16,7 @@ public class FraudDetector {
 
         String inputFile = args[0];         // read transactions input file from command line
         Long priceThreshold = 11000L;       // in cents
-        String date = "2014-04-29";         // in "yyyy-MM-dd" format
+        String date = "2017-09-14";         // in "yyyy-MM-dd" format
         
 
         // ------------------------- Test 01 -------------------------
@@ -82,18 +82,61 @@ public class FraudDetector {
         } else {
             System.out.println("Test06: Fail");
         }
-        
-        // call filterTransactions() with transactions, price threchold and date to get a list of cards w/ suspicious transactions
-        ArrayList<String> suspect_cards_list = filterTransactions("test06.file", date, priceThreshold);
 
-        // print out suspected card hashes
-        if(suspect_cards_list.size() == 0) {
-            System.out.println("No cards with fraudulent transactions found.");
+        // ------------------------- Test 07 -------------------------
+        // Non-existent input file
+        ArrayList<String> expected_test07 = null;
+        
+        if(equalLists(expected_test07, filterTransactions("test07.file", date, priceThreshold))) {
+            System.out.println("Test07: Pass");
         } else {
-            for (String cardHash: suspect_cards_list) {
-                System.out.println(cardHash);
-            }
-        }        
+            System.out.println("Test07: Fail");
+        }
+
+        // ------------------------- Test 08 -------------------------
+        // Two cards, multiple transcations, single day, both exceeding
+        ArrayList<String> expected_test08 = new ArrayList<String>();
+        expected_test08.add("10d7ce2f43e35fa57d1bbf8b1e2");
+        expected_test08.add("10d7ce2f43e35fa57d1bbf8b1e3");        
+        
+        if(equalLists(expected_test08, filterTransactions("test08.file", date, priceThreshold))) {
+            System.out.println("Test08: Pass");
+        } else {
+            System.out.println("Test08: Fail");
+        }
+
+        // ------------------------- Test 09 -------------------------
+        // Two cards, multiple transcations, single day, both non-exceeding
+        ArrayList<String> expected_test09 = new ArrayList<String>();        
+        
+        if(equalLists(expected_test09, filterTransactions("test09.file", date, priceThreshold))) {
+            System.out.println("Test09: Pass");
+        } else {
+            System.out.println("Test09: Fail");
+        }
+
+        // ------------------------- Test 10 -------------------------
+        // Two cards, multiple transcations, single day, both non-exceeding
+        ArrayList<String> expected_test10 = new ArrayList<String>();
+        expected_test08.add("10d7ce2f43e35fa57d1bbf8b1e4");
+        
+        if(equalLists(expected_test10, filterTransactions("test10.file", date, priceThreshold))) {
+            System.out.println("Test10: Pass");
+        } else {
+            System.out.println("Test10: Fail");
+        }
+        
+        // // call filterTransactions() with transactions, price threchold and date to get a list of cards w/ suspicious transactions
+        // ArrayList<String> suspect_cards_list = filterTransactions("test06.file", date, priceThreshold);
+
+        // // print out suspected card hashes
+        // if(suspect_cards_list.size() == 0) {
+        //     System.out.println("No cards with fraudulent transactions found.");
+        // } else {
+        //     for (String cardHash: suspect_cards_list) {
+        //         System.out.println(cardHash);
+        //     }
+        // }        
     }
 
     // filterTransactions function takes in a list of transactions, a date, and a threshold spend amount and returns
