@@ -17,9 +17,74 @@ public class FraudDetector {
         String inputFile = args[0];         // read transactions input file from command line
         Long priceThreshold = 11000L;       // in cents
         String date = "2014-04-29";         // in "yyyy-MM-dd" format
+        
 
+        // ------------------------- Test 01 -------------------------
+        // a single card, with one exceeding transaction
+        ArrayList<String> expected_test01 = new ArrayList<String>();
+        expected_test01.add("10d7ce2f43e35fa57d1bbf8b1e2");
+
+        if(equalLists(expected_test01, filterTransactions("test01.file", date, priceThreshold))) {
+            System.out.println("Test01: Pass");
+        } else {
+            System.out.println("Test01: Fail");
+        }
+
+        // ------------------------- Test 02 -------------------------
+        // a single card, with one non-exceeding transaction
+        ArrayList<String> expected_test02 = new ArrayList<String>();
+        
+        if(equalLists(expected_test02, filterTransactions("test02.file", date, priceThreshold))) {
+            System.out.println("Test02: Pass");
+        } else {
+            System.out.println("Test02: Fail");
+        }
+
+        // ------------------------- Test 03 -------------------------
+        // an empty input
+        ArrayList<String> expected_test03 = new ArrayList<String>();
+        
+        if(equalLists(expected_test03, filterTransactions("test03.file", date, priceThreshold))) {
+            System.out.println("Test03: Pass");
+        } else {
+            System.out.println("Test03: Fail");
+        }
+
+        // ------------------------- Test 04 -------------------------
+        // a garbage input
+        ArrayList<String> expected_test04 = new ArrayList<String>();
+        
+        if(equalLists(expected_test04, filterTransactions("test04.file", date, priceThreshold))) {
+            System.out.println("Test04: Pass");
+        } else {
+            System.out.println("Test04: Fail");
+        }
+
+        // ------------------------- Test 05 -------------------------
+        // Two cards, both exceeding limit for the same day
+        ArrayList<String> expected_test05 = new ArrayList<String>();
+        expected_test05.add("10d7ce2f43e35fa57d1bbf8b1e2");
+        expected_test05.add("10d7ce2f43e35fa57d1bbf8b1e3");
+        
+        if(equalLists(expected_test05, filterTransactions("test05.file", date, priceThreshold))) {
+            System.out.println("Test05: Pass");
+        } else {
+            System.out.println("Test05: Fail");
+        }
+
+        // ------------------------- Test 06 -------------------------
+        // Two cards, both exceeding limit for different days
+        ArrayList<String> expected_test06 = new ArrayList<String>();
+        expected_test06.add("10d7ce2f43e35fa57d1bbf8b1e3");
+        
+        if(equalLists(expected_test06, filterTransactions("test06.file", date, priceThreshold))) {
+            System.out.println("Test06: Pass");
+        } else {
+            System.out.println("Test06: Fail");
+        }
+        
         // call filterTransactions() with transactions, price threchold and date to get a list of cards w/ suspicious transactions
-        ArrayList<String> suspect_cards_list = filterTransactions(inputFile, date, priceThreshold);
+        ArrayList<String> suspect_cards_list = filterTransactions("test06.file", date, priceThreshold);
 
         // print out suspected card hashes
         if(suspect_cards_list.size() == 0) {
@@ -70,8 +135,8 @@ public class FraudDetector {
 
             // confirm transaction is complete
             if(transactionComponents.length < 3) {
-                // malformed input, move to next
-                System.out.println("Error parsing transaction: " + transaction);
+                // malformed input, move to next transaction
+                // System.out.println("Error parsing transaction: " + transaction);
                 continue;
             }
 
@@ -92,8 +157,8 @@ public class FraudDetector {
                 day = new Long(dte.getTime());
                 
             } catch(ParseException e) {
-                // malformed input, move to next
-                System.out.println("Error parsing date: " + dayComp);
+                // malformed input, move to next transaction
+                // System.out.println("Error parsing date: " + dayComp);
                 continue;
             }
 
@@ -142,7 +207,7 @@ public class FraudDetector {
     }
 
     // utility test function to check if two given lists of card number hashes contain the same elements
-    public  boolean equalLists(ArrayList<String> expected, ArrayList<String> result) {
+    public static boolean equalLists(ArrayList<String> expected, ArrayList<String> result) {
         if (expected == null && result == null) {
             return true;
         }
