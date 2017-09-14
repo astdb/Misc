@@ -75,12 +75,24 @@ public class FraudDetector {
         // ------------------------- Test 06 -------------------------
         // Two cards, both exceeding limit for different days
         ArrayList<String> expected_test06 = new ArrayList<String>();
-        expected_test06.add("10d7ce2f43e35fa57d1bbf8b1e3");
+        expected_test06.add("10d7ce2f43e35fa57d1bbf8b1e2");
         
         if(equalLists(expected_test06, filterTransactions("test06.file", date, priceThreshold))) {
             System.out.println("Test06: Pass");
         } else {
             System.out.println("Test06: Fail");
+        }
+
+        // print out suspected card hashes
+        ArrayList<String> suspect_cards_list = filterTransactions("test06.file", date, priceThreshold);
+        if(suspect_cards_list.size() == 0) {
+            System.out.println("No cards with fraudulent transactions found.");
+            return;
+        } else {
+            for (String cardHash: suspect_cards_list) {
+                System.out.println(cardHash);
+                return;
+            }
         }
 
         // ------------------------- Test 07 -------------------------
@@ -126,29 +138,42 @@ public class FraudDetector {
             System.out.println("Test10: Fail");
         }
         
-        // // call filterTransactions() with transactions, price threchold and date to get a list of cards w/ suspicious transactions
-        // ArrayList<String> suspect_cards_list = filterTransactions("test06.file", date, priceThreshold);
-
-        // // print out suspected card hashes
+        // print out suspected card hashes
+        // ArrayList<String> suspect_cards_list = filterTransactions("test05.file", date, priceThreshold);
         // if(suspect_cards_list.size() == 0) {
         //     System.out.println("No cards with fraudulent transactions found.");
+        //     return;
         // } else {
         //     for (String cardHash: suspect_cards_list) {
         //         System.out.println(cardHash);
+        //         return;
         //     }
-        // }        
+        // }
     }
 
     // filterTransactions function takes in a list of transactions, a date, and a threshold spend amount and returns
     // a list of credit card number hashes associated with a total of transactions exceeding the threshold for that day.
-    public static ArrayList<String> filterTransactions(String inputFile, String date, long amountThreshold) {
+    public static ArrayList<String> filterTransactions(String inputFile, String dateThreshold, long amountThreshold) {
         // read input file
         Scanner input = null;
 
         try {
             input = new Scanner(new File(inputFile));
         } catch( FileNotFoundException e ) {
-            System.out.println("No such file: " + inputFile);
+            // System.out.println("No such file: " + inputFile);
+            return null;
+        }
+        
+        if(inputFile == null || dateThreshold == null) {
+            return null;
+        }
+
+        // ensure that the date provided is of "yyyy-MM-dd" format
+        dateThreshold = dateThreshold.trim();
+        Pattern properDate = Pattern.compile("^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$");
+        Matcher m = properDate.matcher(dateThreshold);
+        if (!m.find()) {
+            System.out.println("Invalid date threshold parameter.");
             return null;
         }
 
@@ -157,19 +182,33 @@ public class FraudDetector {
         // e.g 
         //  card1 -> {date1 -> total1, date2 -> total2}
         //  card2 -> {date3 -> total3}
-        HashMap<String, HashMap<Long, Long>> creditCardTotals = new HashMap<String, HashMap<Long, Long>>();
+        // HashMap<String, HashMap<Long, Long>> creditCardTotals = new HashMap<String, HashMap<Long, Long>>();
+        HashMap<String, Long> creditCardTotals = new HashMap<String, Long>();
 
         // list of suspicious cards - this will be populated whenever a card's total for a given day is detected to be over threshold
         ArrayList<String> suspectCards = new ArrayList<String>();
+
+        // get timestamp for the threshold date (the date the fraudulent transaction cards are required for)
+        // Long dateThreshold = null;
+        // try {
+        //     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");        
+        //     Date dte = dateFormat.parse(date);
+        //     dateThreshold = new Long(dte.getTime());
+            
+        // } catch(ParseException e) {
+        //     // malformed input, move to next transaction
+        //     // System.out.println("Error parsing date: " + dayComp);
+        //     return null;
+        // }
         
         // iterate through each of the transaction input file
-        while( input.hasNextLine() ) {
+        while(input.hasNextLine()) {
             String transaction = input.nextLine();      // e.g. "10d7ce2f43e35fa57d1bbf8b1e2, 2014-04-29T13:15:54, 10.00"
 
             // ignore if line starts with # (comment)
             Pattern commentLine = Pattern.compile("^#");
-            Matcher m = commentLine.matcher(transaction.trim());
-            if (m.find()) {
+            Matcher clm = commentLine.matcher(transaction.trim());
+            if (clm.find()) {
                 continue;
             }
 
@@ -190,59 +229,94 @@ public class FraudDetector {
 
             // extract day component from input e.g. "2014-04-29" from "2014-04-29T13:15:54"
             String[] dateSplit = transactionDate.split("T");
-            String dayComp = dateSplit[0];
+            String transactionDate_day = dateSplit[0];
 
-            // get timestamp for the date (day component)
-            Long day = null;
-            try {
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");        
-                Date dte = dateFormat.parse(dayComp);
-                day = new Long(dte.getTime());
-                
-            } catch(ParseException e) {
-                // malformed input, move to next transaction
-                // System.out.println("Error parsing date: " + dayComp);
+            // ensure that the date provided is of "yyyy-MM-dd" format
+            transactionDate_day = transactionDate_day.trim();
+            Matcher pdm = properDate.matcher(transactionDate_day);
+            if (!pdm.find()) {
+                // System.out.println("Invalid date threshold parameter.");
+                // return null;
+
+                // possibly malformed transaction reord - move onto next
                 continue;
             }
 
-            Long amt = new Long((long)(Float.parseFloat(transactionAmount)*100));
+            // get timestamp for the transaction date (day component)
+            // Long day = null;
+            // try {
+            //     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");        
+            //     Date dte = dateFormat.parse(dayComp);
+            //     day = new Long(dte.getTime());
+                
+            // } catch(ParseException e) {
+            //     // malformed input, move to next transaction
+            //     // System.out.println("Error parsing date: " + dayComp);
+            //     continue;
+            // }
+
+            // check if this transaction is one we'd be interested in - i.e. one for the date given
+            // TODO - begs the question, can't you just string compare the day components?
+            // Also, if the processor only sees transactions only for a given day, can't it be a simple hashmap of card hash-> total?
+            if(transactionDate_day != dateThreshold) {
+                continue;
+            }
+
+            Long amt = null;
+            try {
+                amt = new Long((long)(Float.parseFloat(transactionAmount)*100));
+            } catch(NumberFormatException e) {
+                // malformed input - continue to next
+                continue;
+            }            
 
             // check if a record exists for this credit card
-            HashMap<Long, Long> cardExists = creditCardTotals.get(transactionCardHash);
+            // HashMap<Long, Long> cardExists = creditCardTotals.get(transactionCardHash);
+            Long cardTotal = creditCardTotals.get(transactionCardHash);
 
-            if( cardExists != null ) {
-                // card known in this dataset before - check if a total eists for this date
+            if(cardTotal != null) {
+                // card known in this dataset before - update total
+                Long newTotal = cardTotal + amt;
 
-                // check if a total exists for this card for this date
-                Long totalExists = cardExists.get(day);                
-
-                if(totalExists != null) {
-                    // a count is known for this card for this date - update                   
-                    Long newTot = cardExists.get(day) + amt;
-
-                    if(newTot > amountThreshold) {
-                        if(!suspectCards.contains(transactionCardHash)){
-                            suspectCards.add(transactionCardHash);
-                        }
+                if(newTotal > amountThreshold) {
+                    if(!suspectCards.contains(transactionCardHash)) {
+                        suspectCards.add(transactionCardHash);
                     }
-                    cardExists.put(day, newTot);
-                } else {
-                    // no count for this card for this date, add
-                    cardExists.put(day, amt);
+                    
                 }
+
+                // // check if a total exists for this card for this date
+                // Long totalExists = cardExists.get(day);
+
+                // if(totalExists != null) {
+                //     // a count is known for this card for this date - update                   
+                //     Long newTot = cardExists.get(day) + amt;
+
+                //     if(newTot > amountThreshold) {
+                //         if(!suspectCards.contains(transactionCardHash)) {
+                //             suspectCards.add(transactionCardHash);
+                //         }
+                //     }
+                //     cardExists.put(day, newTot);
+                // } else {
+                //     // no count for this card for this date, add
+                //     cardExists.put(day, amt);
+                // }
 
             } else {
                 // new card to this dataset - create record
+                creditCardTotals.put(transactionCardHash, amt);
+
                 if(amt > amountThreshold) {
-                    if(!suspectCards.contains(transactionCardHash)){
+                    if(!suspectCards.contains(transactionCardHash)) {
                         suspectCards.add(transactionCardHash);
                     }
                 }
 
-                HashMap<Long, Long> thisAmount = new HashMap<Long, Long>();
-                thisAmount.put(day, amt);                
+                // HashMap<Long, Long> thisAmount = new HashMap<Long, Long>();
+                // thisAmount.put(day, amt);                
 
-                creditCardTotals.put(transactionCardHash, thisAmount);
+                // creditCardTotals.put(transactionCardHash, thisAmount);
             }
         }
 
@@ -251,6 +325,10 @@ public class FraudDetector {
 
     // utility test function to check if two given lists of card number hashes contain the same elements
     public static boolean equalLists(ArrayList<String> expected, ArrayList<String> result) {
+        // DEBUG - print out the two lists
+        System.out.println("\tExpected: " + expected);
+        System.out.println("\tResults: " + result);
+
         if (expected == null && result == null) {
             return true;
         }
@@ -261,7 +339,8 @@ public class FraudDetector {
 
         // Sort and compare the two lists          
         Collections.sort(expected);
-        Collections.sort(result);      
+        Collections.sort(result);
+
         return expected.equals(result);
     }
 }
