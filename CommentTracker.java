@@ -1,6 +1,9 @@
+
+import java.util.*; 
 import java.io.*;
 import java.util.regex.*;
 
+// CommentTracker reads a source file and prints out comments (both // and /* */ styles)
 public class CommentTracker {
     public static void main(String args[] ) throws Exception {
         /* Enter your code here. Read input from STDIN. Print output to STDOUT */
@@ -10,13 +13,13 @@ public class CommentTracker {
         try {
             input = new Scanner(new File(inputFile));
         } catch( FileNotFoundException e ) {
-            // System.out.println("No such file: " + inputFile);
-            return null;
+            System.out.println("No such file: " + inputFile);
+            return;
         }
       
         Pattern singleLineComment = Pattern.compile("//");
-        Pattern multiLineCommentStart = Pattern.compile("/*");
-        Pattern multiLineCommentEnd = Pattern.compile("*/");
+        Pattern multiLineCommentStart = Pattern.compile("/\\*");
+        Pattern multiLineCommentEnd = Pattern.compile("\\*/");
       
          boolean inMultiLineComment = false;
          String multiLineCommentContent = "";
@@ -26,18 +29,48 @@ public class CommentTracker {
             if(sourceLine != null){
                 sourceLine = sourceLine.trim();
               
-                if(!inMultiLineComment){
+                if(!inMultiLineComment) {
                   // check for single/multiline comment starts in current source line
                   Matcher singleOpenMatch = singleLineComment.matcher(sourceLine);
                   Matcher multiOpenMatch = multiLineCommentStart.matcher(sourceLine);
-                  
+
+                  // if a line contains both // and /*, find which comes first
+                  if(singleOpenMatch.find() && multiOpenMatch.find()){
+                      int singleStart = singleOpenMatch.start();
+                      int multiStart = multiOpenMatch.start();
+
+                      if(singleStart < multiStart) {
+                          // single line comment
+                          System.out.println(sourceLine.substring(singleOpenMatch.start()));
+                      } else {
+                          // multiline comment start
+                          inMultiLineComment = true;
+                          multiLineCommentContent  = "\n" + sourceLine.substring(multiOpenMatch.start());
+                      }
+                  } else if(singleOpenMatch.find()){
+                      // a single-line comment starter was found in this source line - print line from that index
+                      System.out.println(sourceLine.substring(singleOpenMatch.start()));
+                  } else if(multiOpenMatch.find()){
+                      // a multiline comment starter was found in this source line - print line from that index
+                      // multiline comment start
+                      inMultiLineComment = true;
+                      multiLineCommentContent  = "\n" + sourceLine.substring(multiOpenMatch.start());
+                  }
                   
                 } else {
                   // already within a multiline source comment - look for multiline comment close
                   Matcher multiCloseMatch = multiLineCommentStart.matcher(sourceLine);
+
+                  if(multiCloseMatch.find()) {
+                      inMultiLineComment = false;
+                      multiLineCommentContent += "\n" + sourceLine.substring(0, multiCloseMatch.start());
+
+                      // TODO: what if a multi/single comment starts after the */ ?
+                  }
                   
                 }
                 
             }
+         }
     }
 }
