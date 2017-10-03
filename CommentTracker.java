@@ -17,15 +17,17 @@ public class CommentTracker {
             return;
         }
       
+        // literal patterns for single line comment opener, multiline comment opener and multiline comment closer
         Pattern singleLineComment = Pattern.compile("//");
         Pattern multiLineCommentStart = Pattern.compile("/\\*");
         Pattern multiLineCommentEnd = Pattern.compile("\\*/");
       
-         boolean inMultiLineComment = false;
-         String multiLineCommentContent = "";
+         boolean inMultiLineComment = false;        // flag indicating if in a multiline comment (e.g. read a '/*' and looking for a '*/')
+         String multiLineCommentContent = "";       // content of the multiline comment being read
       
+         // for each line in source file
          while(input.hasNextLine()) {
-            String sourceLine = input.nextLine();
+            String sourceLine = input.nextLine();   /* // read */   // [that's just a weird comment for dogfooding (;]
             if(sourceLine != null){
                 sourceLine = sourceLine.trim();
               
@@ -46,6 +48,18 @@ public class CommentTracker {
                           // multiline comment start
                           inMultiLineComment = true;
                           multiLineCommentContent  = "\n" + sourceLine.substring(multiOpenMatch.start());
+
+                          // does this multiline comment close on this line?
+                          while(sourceLine.length() > multiStart+2) {
+                              String sourceLine = sourceLine.substring(multiStart+2);
+                              
+                              Matcher multiCloseMatch = multiLineCommentEnd.matcher(restOfLine);
+
+                              if(multiCloseMatch.find()) {
+                                  
+                              }
+
+                          }
                       }
                   } else if(singleOpenMatch.find()){
                       // a single-line comment starter was found in this source line - print line from that index
@@ -59,13 +73,14 @@ public class CommentTracker {
                   
                 } else {
                   // already within a multiline source comment - look for multiline comment close
-                  Matcher multiCloseMatch = multiLineCommentStart.matcher(sourceLine);
+                  Matcher multiCloseMatch = multiLineCommentEnd.matcher(sourceLine);
 
                   if(multiCloseMatch.find()) {
                       inMultiLineComment = false;
                       multiLineCommentContent += "\n" + sourceLine.substring(0, multiCloseMatch.start());
 
                       // TODO: what if a multi/single comment starts after the */ ?
+                      // need to run line processor for rest of this line
                   }
                   
                 }
