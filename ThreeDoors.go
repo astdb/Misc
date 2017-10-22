@@ -2,7 +2,7 @@
 // backstory: the popular riddle goes as that at a game show you're shown three doors, behind one
 // there's an expensive gift - the others are empty. once you select a door, the host opens one of the
 // remaining doors and shows that it's empty, and gives you a chance to revise your choice -
-// do you stick with your original selection or do you swap?
+// do you stick with your original selection or do you swap? (or, do you get better odds by swapping?)
 
 package main
 
@@ -12,12 +12,14 @@ import (
 )
 
 func main() {
+	// program will run a number of gameshows and calculate cumulative odds
 	totalRuns := 0.0 // number of total selections (float values to calculate %.2f precise odds later - Go keeps int division int)
 	totalWins := 0.0 // number of total wins by contestant
 	change := false  // flag denoting whether contestant changes selection upon empty door reveal or not
 
 	// run through some number of game shows
-	for i := 0; i < 10000; i++ {
+	numShows := 1000000
+	for i := 0; i < numShows; i++ {
 		totalRuns++
 
 		// initialize three doors with a gift behind one
@@ -30,7 +32,7 @@ func main() {
 		// host demonstrates the empty door from the remaining ones
 		empty := demoEmptyDoor(doors, contestantChoice)
 
-		// change or not
+		// contenstant wither swaps their original choice or doesn't, using showhost-provided info
 		contestantChoice = changeOrKeep(contestantChoice, empty, change)
 
 		// outcome
@@ -41,16 +43,18 @@ func main() {
 
 	// calculate odds / output results
 	odds := (totalWins * 100) / totalRuns
-	fmt.Printf("Change: %v\nRuns: %.0f\nWins: %.0f\nOdds: %.2f%%\n", change, totalRuns, totalWins, odds)
+	fmt.Printf("Change: %v\nRuns: \t%.0f\nWins: \t%.0f\nWin %%: \t%.2f%%\n", change, totalRuns, totalWins, odds)
 }
 
 // given contestant's choice, shown empty door, and a flag denoting to change selection or not, return a selection
 // (changed if flag set)
 func changeOrKeep(choice int, empty int, change bool) int {
 	if !change {
+		// not changing the already chosen door
 		return choice
 	}
 
+	// find a door that's neither the one we've already selected nor the one the show host opened
 	for i := 0; i < 3; i++ {
 		if i == choice || i == empty {
 			continue
