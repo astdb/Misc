@@ -33,6 +33,11 @@ public class CountnSay {
             return;
         }
 
+        if(countTo <= 0) {
+            System.out.println("Program input need to be a positive numeric value.");
+            return;
+        }
+
         for(int i = 1; i < countTo + 1; i++) {
             System.out.println(countAndSay(i));
         }
@@ -47,32 +52,19 @@ public class CountnSay {
             return "1";
         }
 
-        for (int termCount = 0; termCount < n; termCount++) {
-            // long rem = i % base;
-            // System.out.println("Pre-while | termCount = " + termCount);
+        for (int termCount = 1; termCount < n; termCount++) {
             BigInteger rem = i.remainder(base);
-            // System.out.println(rem.toString() + " == " + i.toString() + " % " + base.toString());
-            // i = i / base;
             i = i.divide(base);
-            // System.out.println(i.toString() + " == " + i.toString() + " / " + base.toString() + "\n");
-
-            // System.out.println("REM: " + rem.toString());
 
             // keep track of digit groups
             String term = "";
             int groupCount = 1;
-            // long digit = rem;
             BigInteger digit = rem;
 
-            // while(i > 0) {
             while(i.compareTo(BigInteger.valueOf(0)) == 1) {
-                // System.out.println("In while..");
                 rem = i.remainder(base);
-                // System.out.println(rem.toString() + " == " + i.toString() + " % " + base.toString());
                 i = i.divide(base);
-                // System.out.println(i.toString() + " == " + i.toString() + " / " + base.toString() + "\n");
 
-                // if(rem != digit) {
                 if(rem.compareTo(digit) != 0) {
                     // new digit group starting
                     term = groupCount + "" + digit.toString()  + term;
@@ -87,13 +79,11 @@ public class CountnSay {
 
             // close off the final digit group
             term = groupCount + "" + digit.toString()  + term;
-            // System.out.println((termCount + 1) + "th term: " + term + "\n");
 
             if(termCount == (n - 1)) {
                 return term;
             }
 
-            // i = Long.parseLong(term);
             i = new BigInteger(term);
         }        
 
