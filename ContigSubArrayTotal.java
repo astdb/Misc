@@ -17,16 +17,18 @@ public class ContigSubArrayTotal {
         // subarray size
         for(int i = 1; i < nums.length-1; i++) {
             // go through subarrays of i length, starting from index j
+            // System.out.printf("\tLooking for subarrays of size %d\n\t\tStarting at...", i);
             for(int j = 0; j+i <= nums.length ; j++) {
+                // System.out.printf("\t%d ", j);
                 if(i == 1 && j == 0) {
-                    // inititalize max
+                    // inititalize max                    
                     maxSubTot[0] = nums[0];
                     maxSubTot[1] = 0;
                     maxSubTot[2] = 1;
                 } else {
                     int tot = 0;
                     for(int k = j; k < j+i; k++) {
-                        tot =+ nums[k];
+                        tot = tot + nums[k];
                     }
 
                     if(tot > maxSubTot[0]) {
@@ -34,8 +36,9 @@ public class ContigSubArrayTotal {
                         maxSubTot[1] = j;
                         maxSubTot[2] = j+i;
                     }
-                }
+                }                
             }
+            // System.out.printf("\n\t\tDone [total: %d, start: %d, end+1: %d]\n\n", maxSubTot[0], maxSubTot[1], maxSubTot[2]);
         }
 
         int[] result = new int[maxSubTot[2]-maxSubTot[1]];
