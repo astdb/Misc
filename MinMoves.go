@@ -20,16 +20,43 @@ func main() {
 func minMoves(nums []int) int {
 	// while not all array elements are equal
 	moves := 0
-    for !equalElements(num) {
+    for !equalElements(nums) {
 		moves = moves + 1
-		highest := getHighest(num)
+		highest := getHighest(nums)
 
-		for i := 0; i < len(num); i++ {
+		for i := 0; i < len(nums); i++ {
 			if i != highest {
-				num[i] = num[i] + 1
+				nums[i] = nums[i] + 1
 			}
 		}
 	}
 
 	return moves
+}
+
+func getHighest(n []int) int {
+	highest := n[0]
+
+	for _, v := range n {
+		if v > highest {
+			highest = v
+		}
+	}
+
+	return highest
+}
+
+func equalElements(n []int) bool {
+	if len(n) <= 0 {
+		return false
+	}
+
+	k := n[0]
+	for _, v := range n {
+		if k != v {
+			return false
+		}
+	}
+
+	return true
 }
