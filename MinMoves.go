@@ -13,7 +13,7 @@ func main() {
 	tests := [][]int{{1,2,3,}, {4,5,6,}, {7,8,9,}}
 
 	for _, testcase := range tests {
-		fmt.Printf("%v\t%d", testcase, minMoves(testcase))
+		fmt.Printf("%v\t%d\n", testcase, minMoves(testcase))
 	}
 }
 
@@ -23,9 +23,10 @@ func minMoves(nums []int) int {
     for !equalElements(nums) {
 		moves = moves + 1
 		highest := getHighest(nums)
+		fmt.Printf("\t%v\n", nums)
 
 		for i := 0; i < len(nums); i++ {
-			if i != highest {
+			if nums[i] != highest {
 				nums[i] = nums[i] + 1
 			}
 		}
