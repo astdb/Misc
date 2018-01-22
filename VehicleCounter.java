@@ -5,12 +5,41 @@ import java.util.*;
 public class VehicleCounter {
     public static void main(String[] args) {
         // read input data file from command line and process options
-        if( args.length <= 0 || args[0].trim().length() <= 0 ) {
-            System.out.println("Usage: $> java VehicleCounter data.txt");
+        // an invocation must have a minimum of two command arguments provided: [inputfile] [progmode]
+        if( args.length < 2 || args[0].trim().length() <= 0 ) {
+            System.out.println("Usage: $> java VehicleCounter inputfile programmode [options]");
             return;
         }
 
         String dataFileName = args[0].trim();
+
+        // program mode
+        boolean MODE_TOTALS = false;    // compute total counts, as other options specify
+        boolean MODE_PEAKS = false;     // compute peak traffic times
+        boolean MODE_SPEEDS = false;    // compute speed distribution
+        boolean MODE_DIST = false;      // compute intercar distances
+
+        String progMode = args[0].trim();
+        if (progMode.equalsIgnoreCase("totals")) {
+            MODE_TOTALS = true;
+
+            // read options required for TOTALS mode. five command line arguments required in total for invocation in TOTAL mode
+            // e.g. $> java VehicleCounter inputdata.file totals south evening average    // output the average of southbound evening totals
+
+
+        } else if (progMode.equalsIgnoreCase("peaks")) {
+            MODE_PEAKS = true;
+
+        } else if (progMode.equalsIgnoreCase("speeds")) {
+            MODE_SPEEDS = true;
+
+        } else if (progMode.equalsIgnoreCase("distance")) {
+            MODE_DIST = true;
+        } else {
+            // invalid program mode specifier
+            System.out.println("Invalid program mode.");
+            return;
+        }
 
         // iterate through counter data and process required metric
         Scanner vehicleData = null;
@@ -25,7 +54,8 @@ public class VehicleCounter {
         int day = 1;
         String prevDataPointSensor = null;
         int prevDataPointTime = 0;
-        int j = 0;  // tem counter to help print first 10 data points for each day
+        int j = 0;  // tem counter to help print first j data points for each day
+        boolean southBoundDetected = false;
 		while( vehicleData.hasNextLine() ) {
             // read row
             String dataPoint = vehicleData.nextLine();
@@ -52,10 +82,32 @@ public class VehicleCounter {
                     System.out.println("\nDAY " + day);
                 }
 
-                if(j < 10) {
-                    System.out.printf("\tSensor: %s | Time: %d\n", dataPointSensor, dataPointTime);
+                if(j < 100) {
+                    System.out.printf("\t%d. Sensor: %s | Time: %d\n", j+1, dataPointSensor, dataPointTime);
                     j++;
-                }               
+                }
+
+                if(prevDataPointSensor != null && dataPointSensor != null) {
+                    if(prevDataPointSensor.equalsIgnoreCase("A") && dataPointSensor.equalsIgnoreCase("A")) {
+                        if(dataPointTime - prevDataPointTime <= 160) {  // at 60kmh, a car with 2.5m wheelbase would take about 150ms to go over a single sensor
+                            // this data point and the previous one are probably made by the same car (going northbound, over sensor A)
+                            
+                            // TODO - at this point, the vehicle will be counted if the time is in the time period required for analysis
+                        }
+                    }
+
+                    if(prevDataPointSensor.equalsIgnoreCase("A") && dataPointSensor.equalsIgnoreCase("B")) {
+                        if(dataPointTime - prevDataPointTime <= 6) {
+                            // southbound car, first set of axles going over A and then B
+                            if(southBoundDetected) {
+                                // TODO - at this point, the vehicle will be counted if the time is in the time period required for analysis
+                                
+                            } else {
+                                southBoundDetected = true;
+                            }
+                        }
+                    }
+                }
 
                 // completed processing - update previous with this data point data
                 prevDataPointSensor = dataPointSensor;
