@@ -19,12 +19,25 @@ public class VehicleCounter {
         boolean MODE_SPEEDS = false;    // compute speed distribution
         boolean MODE_DIST = false;      // compute intercar distances
 
-        String progMode = args[0].trim();
+        String TOTAL_BOUND = null;  // direction the totals are requied for  i.e. "north", "south"
+        String TOTAL_TIME = null;   // time of day to compute totals for i.e. "morning", "evening", "hourly" etc
+        String TOTAL_TERM = null;   // time period to calculate totals per i.e. "daily", "avg"
+
+        String progMode = args[1].trim();
         if (progMode.equalsIgnoreCase("totals")) {
             MODE_TOTALS = true;
 
             // read options required for TOTALS mode. five command line arguments required in total for invocation in TOTAL mode
             // e.g. $> java VehicleCounter inputdata.file totals south evening average    // output the average of southbound evening totals
+            if(args.length < 5) {
+                // invalid invocation 
+                System.out.println("Invalid total count invocation.");
+                return
+            }
+
+            TOTAL_BOUND = args[2].trim();
+            TOTAL_TIME = args[3].trim();
+            TOTAL_TERM = args[4].trim();
 
 
         } else if (progMode.equalsIgnoreCase("peaks")) {
@@ -52,7 +65,7 @@ public class VehicleCounter {
 		}
 
         int day = 1;
-        String prevDataPointSensor = null;
+        String prevDataPointSensor = null;      // previously read datapoint
         int prevDataPointTime = 0;
         int j = 0;  // tem counter to help print first j data points for each day
         boolean southBoundDetected = false;
