@@ -6,6 +6,7 @@
 public class SwapBits {
     public static void main(String[] args) {
         swapBits(24L, 1, 2);
+        swapBits(1, 2, 24L);
     }
 
     // swap bits in ith and jth locations of x and return resulting x
@@ -38,6 +39,21 @@ public class SwapBits {
             total += bits[k] * Math.pow(2, i);
         }
         return total;
+    }
+
+    // swap bits using bitwise operations (O(1))
+    public static long swapBits(int i, int j, long x) {
+        // extract the ith and jth bits and check if they differ
+        if(((x >>> i) & 1) != ((x >>> j) & 1)) {
+            // bits differ - swap by flipping values
+
+            // select bits to flip w/ bitmask. Since x ^ 1 = 0 when x = 1 and 1
+            // when x = 0, we can perform the flip XOR
+            long bitMask = (1L << i) | (1L << j);
+            x ^= bitMask;
+        }
+
+        return x;
     }
 
     // print array representing binary number in string format
