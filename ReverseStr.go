@@ -30,9 +30,7 @@ func reverseString(s string) string {
 
 	// reverse characters
 	for i := 0; i < len(s_runes)/2; i++ {
-		temp := s_runes[i]
-		s_runes[i] = s_runes[len(s_runes)-i-1]
-		s_runes[len(s_runes)-i-1] = temp
+		s_runes[i], s_runes[len(s_runes)-i-1] = s_runes[len(s_runes)-i-1], s_runes[i]
 	}
 
 	return string(s_runes)
