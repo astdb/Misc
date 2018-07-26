@@ -8,22 +8,22 @@ The reshaped matrix need to be filled with all the elements of the original matr
 If the 'reshape' operation with given parameters is possible and legal, output the new reshaped matrix; Otherwise, output the original matrix.
 
 Example 1:
-Input: 
-nums = 
+Input:
+nums =
 [[1,2],
  [3,4]]
 r = 1, c = 4
-Output: 
+Output:
 [[1,2,3,4]]
 Explanation:
 The row-traversing of nums is [1,2,3,4]. The new reshaped matrix is a 1 * 4 matrix, fill it row by row by using the previous list.
 Example 2:
-Input: 
-nums = 
+Input:
+nums =
 [[1,2],
  [3,4]]
 r = 2, c = 4
-Output: 
+Output:
 [[1,2],
  [3,4]]
 Explanation:
@@ -37,12 +37,18 @@ import (
 )
 
 func main() {
-	// matrix1 := [][]int{{1,2,3},{4,5,6},{7,8,9}}
-	matrix2 := [][]int{{1,2},{3,4}}
-	fmt.Println(matrixReshape(matrix2, 1, 4))
+	fmt.Println(matrixReshape(nil, 1, 4))
+	fmt.Println(matrixReshape([][]int{{1, 2}, {3, 4}}, 1, 4))
+	fmt.Println(matrixReshape([][]int{{1, 2}, {3, 4}}, 2, 4))
+	fmt.Println(matrixReshape([][]int{{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}, 2, 8))
 }
 
 func matrixReshape(nums [][]int, r int, c int) [][]int {
+	// check if reshape parameters are valid
+	if len(nums) <= 0 || (r*c) != (len(nums)*len(nums[0])) {
+		return nums
+	}
+
 	// expand original matrix
 	expandedMatrix := []int{}
 
@@ -68,17 +74,6 @@ func matrixReshape(nums [][]int, r int, c int) [][]int {
 		row++
 		col = 0
 	}
-
-	// for i := 0; i < len(expandedMatrix); i++ {
-	// 	for row < r {
-	// 		result = append(result, []int{})
-	// 		for col < c {
-	// 			result[row] = append(result[row], i)
-	// 		}
-	// 		row++
-	// 		col = 0
-	// 	}
-	// }	
 
 	return result
 }
