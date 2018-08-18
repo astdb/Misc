@@ -38,10 +38,22 @@ type TreeNode struct {
 	Right *TreeNode
 }
 
+/*
+ALGORITHM
+---------
+
+ - Push root node onto a queue. Then, while the queue is not empty:
+	- Remove a node from queue.
+	- Push all its children into a temp queue.
+	- Keep on popping nodes from queue and pushing their child nodes onto temp queue until queue is empty.
+	- Each time the queue becomes empty, a level has been considered.
+	- Keep track of a total and number of nodes while pushing onto temp queue, and calculate an average each time main queue becomes empty.
+	- Reinitialize main queue with temp queue
+*/
+
 func averageOfLevels(root *TreeNode) []float64 {
 	levelAverages := []float64{}
-	mainQueue := []*TreeNode{}
-	mainQueue = append(mainQueue, root)
+	mainQueue := []*TreeNode{root}
 
 	for len(mainQueue) > 0 {
 		sum := 0
