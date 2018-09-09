@@ -57,7 +57,7 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	ordersList := GetOrders(1, 0)
+	ordersList, _ := GetOrders(1, 0)
 	for _, ord := range ordersList {
 		cust, exists := custMap[ord.CustomerID]
 		if exists {
@@ -113,25 +113,36 @@ func customerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	thisCust, err := GetCustomer(custID)
-	orders := GetOrders(1, custID)
+	if err != nil {
+		fmt.Fprintf(w, "Invalid customer ID | <a href='/'>back</a>")
+		return
+	}
 
 	var custLifeTimeVal float64 = 0
-	for _, order := range orders {
-		custLifeTimeVal += order.TotalExTax
-	}
+	orders, err := GetOrders(1, custID)
+
+	noOrders := false
+	if err != nil {
+		noOrders = true
+	} else {
+		for _, order := range orders {
+			custLifeTimeVal += order.TotalExTax
+		}
+	}	
 
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("<h2>%s %s</h2><b>Lifetime Value: $%.2f</b> | <a href='/'>back</a><br /><br /><table border='1'><thead><tr><th>ORDER ID</th><th>PLACED</th><th>STATUS</th><th>TOTAL</th></tr></thead><tbody>", thisCust.CustFN, thisCust.CustLN, custLifeTimeVal))
-	for _, c := range orders {
-		b.WriteString(fmt.Sprintf("<tr><td>%d</td><td>%s</td><td>%s</td><td>$%.2f</td></tr>", c.OrderID, c.DateCreated, c.OrderStatus, c.TotalExTax))
-	}
-
-	if len(orders) == 0 {
+	
+	if noOrders {
 		b.WriteString(fmt.Sprintf("<tr><td colspan='4'><i>No orders found for this customer.</i></td></tr>"))
+	} else {
+		for _, c := range orders {
+			b.WriteString(fmt.Sprintf("<tr><td>%d</td><td>%s</td><td>%s</td><td>$%.2f</td></tr>", c.OrderID, c.DateCreated, c.OrderStatus, c.TotalExTax))
+		}
 	}
 
 	b.WriteString("</tbody></table>")
-	fmt.Fprintf(w, b.String()) //	sned HTML to browser
+	fmt.Fprintf(w, b.String()) //	send HTML to browser
 
 	return
 }
@@ -246,7 +257,7 @@ func GetCustomers(page int) ([]Customer, error) {
 	return customerList.CustomersList, nil
 }
 
-func GetOrders(page int, customerID int) []Order {
+func GetOrders(page int, customerID int) ([]Order, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -275,26 +286,30 @@ func GetOrders(page int, customerID int) []Order {
 		xmlData, err := ioutil.ReadAll(apiDataResp.Body)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading API response: %v\n", err)
-			os.Exit(1)
+			return orderList.OrdersList, errors.New(fmt.Sprintf("Error reading API response: %v\n", err))
+			// os.Exit(1)
 		}
 		// fmt.Println(string(xmlData))
 		unmarshalError := xml.Unmarshal(xmlData, &orderList)
 		if unmarshalError != nil {
-			fmt.Println("Error unmarshalling")
+			fmt.Println("Error unmarshalling orders XML")
 			fmt.Fprintf(os.Stderr, "%v", unmarshalError)
-			os.Exit(1)
+			return orderList.OrdersList, errors.New(fmt.Sprintf("Error unmarshalling order XML: %v\n", unmarshalError))
+			// os.Exit(1)
+
 		}
 	} else {
-		fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", productAPILocation, err)
-		apiDataResp.Body.Close()
-		os.Exit(1)
+		fmt.Fprintf(os.Stderr, "Error fetching data from API endpoint (%s): %v\n", productAPILocation, err)
+		// apiDataResp.Body.Close()
+		// os.Exit(1)
+		return orderList.OrdersList, errors.New(fmt.Sprintf("Error fetching data from API endpoint (%s): %v\n", productAPILocation, err))
 	}
 
 	// for _, v := range orderList.OrdersList {
 	// 	fmt.Println(v.OrderID, v.CustomerID, v.DateCreated, v.TotalExTax)
 	// }
 
-	return orderList.OrdersList
+	return orderList.OrdersList, nil
 }
 
 type Customers struct {
