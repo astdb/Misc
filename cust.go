@@ -24,25 +24,47 @@ func main() {
 func mainHandler(w http.ResponseWriter, r *http.Request) {
 	// capture page ID from URL
 	fmt.Println("Starting mainHandler()")
-	urlVals := r.URL.Query()
-	pageIDStr, exists := urlVals["page"]
-	fmt.Println(pageIDStr)
+	// urlVals := r.URL.Query()
+	// pageIDStr, exists := urlVals["page"]
+	// fmt.Println(pageIDStr)
 
-	pageID := 1
-	if !exists || len(pageIDStr) != 1 {
+	// pageID := 1
+	// if !exists || len(pageIDStr) != 1 {
+	// 	pageID = 1
+	// } else {
+	// 	var err error = nil
+	// 	pageID, err = strconv.Atoi(pageIDStr[0])
+	// 	fmt.Println("PageID: ", pageID)
+	// 	if err != nil {
+	// 		fmt.Println("Redirecting..")
+	// 		http.Redirect(w, r, "/", 301) // or pageID = 1
+	// 		return
+	// 	}
+	// }
+
+	//-----------------------------
+	// capture Customer ID from URL
+	urlVals := r.URL.Query()
+	custIDStr, exists := urlVals["page"]
+	var pageID int = 1
+	if !exists || len(custIDStr) != 1 {
+		// fmt.Fprintf(w, "Invalid request | <a href='/'>back</a>")
+		// return
 		pageID = 1
-	} else {
-		var err error = nil
-		pageID, err = strconv.Atoi(pageIDStr[0])
-		fmt.Println("PageID: ", pageID)
-		if err != nil {
-			fmt.Println("Redirecting..")
-			http.Redirect(w, r, "/", 301) // or pageID = 1
-			return
-		}
 	}
 
-	// fmt.Println("PageID: ", pageID)
+	var err error = nil
+	if len(custIDStr) > 0 {
+		pageID, err = strconv.Atoi(custIDStr[0])
+	}
+	
+	if err != nil {
+		// fmt.Fprintf(w, "Invalid customer ID | <a href='/'>back</a>")
+		// return
+		pageID = 1
+	}
+	//-----------------------------
+	fmt.Println("pageID: ", pageID)
 	customerList, err := GetCustomers(pageID)
 	if err != nil {
 		fmt.Fprintf(w, "<!DOCTYPE html><html><head><link rel='icon' type='image/png' href='data:image/png;base64,iVBORw0KGgo='></head><body>Error retrieving data | <a href='/'>home</a><body></html>")
@@ -73,11 +95,11 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 	next := ""
 
 	if beforePage {
-		back = fmt.Sprintf("<a href='/page=%d'>back</a>", pageID-1)
+		back = fmt.Sprintf("<a href='/?page=%d'>back</a>", pageID-1)
 	}
 
 	if nextPage {
-		next = fmt.Sprintf("<a href='/page=%d'>next</a>", pageID+1)
+		next = fmt.Sprintf("<a href='/?page=%d'>next</a>", pageID+1)
 	}
 
 	var b strings.Builder
@@ -100,7 +122,6 @@ func customerHandler(w http.ResponseWriter, r *http.Request) {
 	// capture Customer ID from URL
 	urlVals := r.URL.Query()
 	custIDStr, exists := urlVals["id"]
-	// fmt.Println(custIDStr)
 	if !exists || len(custIDStr) != 1 {
 		fmt.Fprintf(w, "Invalid request | <a href='/'>back</a>")
 		return
@@ -188,12 +209,10 @@ func GetCustomer(customerID int) (Customer, error) {
 			os.Exit(1)
 		}
 
-		// fmt.Println(string(xmlData))
 		unmarshalError := xml.Unmarshal(xmlData, &cust)
 		if unmarshalError != nil {
 			fmt.Println("Error unmarshalling")
 			fmt.Fprintf(os.Stderr, "%v", unmarshalError)
-			// os.Exit(1)
 			return cust, unmarshalError
 		}
 
@@ -235,7 +254,6 @@ func GetCustomers(page int) ([]Customer, error) {
 			os.Exit(1)
 		}
 
-		// fmt.Println(string(xmlData))
 		unmarshalError := xml.Unmarshal(xmlData, &customerList)
 		if unmarshalError != nil {
 			fmt.Println("Error unmarshalling")
@@ -262,8 +280,7 @@ func GetOrders(page int, customerID int) ([]Order, error) {
 		page = 1
 	}
 
-	client := &http.Client{} // HTTP client to make API reqs`
-	// page := 1
+	client := &http.Client{} // HTTP client to make API reqs
 
 	var productAPILocation string
 	if customerID > 0 {
@@ -281,13 +298,10 @@ func GetOrders(page int, customerID int) ([]Order, error) {
 	var orderList Orders
 
 	if err == nil && apiDataResp.StatusCode == http.StatusOK {
-		// dec := xml.NewDecoder(apiDataResp.Body)
-
 		xmlData, err := ioutil.ReadAll(apiDataResp.Body)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error reading API response: %v\n", err)
 			return orderList.OrdersList, errors.New(fmt.Sprintf("Error reading API response: %v\n", err))
-			// os.Exit(1)
 		}
 		// fmt.Println(string(xmlData))
 		unmarshalError := xml.Unmarshal(xmlData, &orderList)
@@ -295,7 +309,6 @@ func GetOrders(page int, customerID int) ([]Order, error) {
 			fmt.Println("Error unmarshalling orders XML")
 			fmt.Fprintf(os.Stderr, "%v", unmarshalError)
 			return orderList.OrdersList, errors.New(fmt.Sprintf("Error unmarshalling order XML: %v\n", unmarshalError))
-			// os.Exit(1)
 
 		}
 	} else {
@@ -304,10 +317,6 @@ func GetOrders(page int, customerID int) ([]Order, error) {
 		// os.Exit(1)
 		return orderList.OrdersList, errors.New(fmt.Sprintf("Error fetching data from API endpoint (%s): %v\n", productAPILocation, err))
 	}
-
-	// for _, v := range orderList.OrdersList {
-	// 	fmt.Println(v.OrderID, v.CustomerID, v.DateCreated, v.TotalExTax)
-	// }
 
 	return orderList.OrdersList, nil
 }
