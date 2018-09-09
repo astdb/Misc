@@ -2,8 +2,9 @@ package main
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -14,316 +15,87 @@ import (
 func main() {
 	http.HandleFunc("/", mainHandler)
 	http.HandleFunc("/customer/", customerHandler)
+
+	fmt.Println("Serving website at http://localhost:8080/..")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
-// display main page (customers list/order totals)
+// display main page / customer list
 func mainHandler(w http.ResponseWriter, r *http.Request) {
-	client := &http.Client{}       // HTTP client to make API reqs`
-	page := 1                      // API pagination counter
-	custMap := map[int]*Customer{} // all found customer objects are stored in  hashmap with customer IDs as keys
+	// capture page ID from URL
+	fmt.Println("Starting mainHandler()")
+	urlVals := r.URL.Query()
+	pageIDStr, exists := urlVals["page"]
+	fmt.Println(pageIDStr)
 
-	CUSTOMER := "customer"
-	ID := "id"
-	FIRSTNAME := "first_name"
-	LASTNAME := "last_name"
-	var newCust *Customer
-
-	productAPILocation := fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/customers?limit=250&page=%d", page)
-	req, _ := http.NewRequest("GET", productAPILocation, nil)
-	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
-	req.Header.Add("Content-Type", `application/json`)
-	apiDataResp, err := client.Do(req)
-
-	for err == nil && apiDataResp.StatusCode == http.StatusOK {
-		fmt.Println("Customer API call (main)")
+	pageID := 1
+	if !exists || len(pageIDStr) != 1 {
+		pageID = 1
+	} else {
+		var err error = nil
+		pageID, err = strconv.Atoi(pageIDStr[0])
+		fmt.Println("PageID: ", pageID)
 		if err != nil {
-			// cannot get data - exit and show results so far
-			fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", productAPILocation, err)
-			apiDataResp.Body.Close()
+			fmt.Println("Redirecting..")
+			http.Redirect(w, r, "/", 301) // or pageID = 1
+			return
 		}
-
-		if apiDataResp.StatusCode != http.StatusOK {
-			fmt.Fprintf(os.Stderr, "API request to URL %s failed: %s\n", productAPILocation, apiDataResp.Status)
-			apiDataResp.Body.Close()
-		}
-
-		// decode read XML data body
-		dec := xml.NewDecoder(apiDataResp.Body)
-		// fmt.Println("Request successful")
-
-		var stack []string // we'll use a string slice as a stack data structure to pop on/off start/end elements as we read through the XML data body's tokens
-
-		for {
-			// get next XML token
-			token, err := dec.Token()
-
-			// handle any errors
-			if err == io.EOF {
-				// reached end of data
-				break
-			} else if err != nil {
-				fmt.Fprintf(os.Stderr, "Error reading XML data body token: %v\n", err)
-				os.Exit(1)
-			}
-
-			// switch statement to take selective action based on the current token (start, end or data)
-			switch token := token.(type) {
-			case xml.StartElement:
-				stack = append(stack, token.Name.Local)
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUSTOMER {
-					// start of a new <work> in XML data: create a new Work instance and pop in to the list of all customers
-					newCust = createCustomer()
-					// customers = append(customers, newCust)
-				}
-
-			case xml.EndElement:
-				// XML end element: pop off stack, and finalize current in-memory work object
-
-				// check if there are already XML opening tags stored in stack - if not, we've encountered a closing tag without an opening tag
-				if len(stack) <= 0 {
-					fmt.Fprintf(os.Stderr, "Attempting to pop an element(%s) without any on stack - possibly malformed XML\n", token.Name.Local)
-					os.Exit(1)
-				}
-
-				elementPopped := stack[len(stack)-1]
-				stack = stack[:len(stack)-1]
-
-				// check for XML consistency - if every end element should have had a corresponding start element
-				if elementPopped != token.Name.Local {
-					fmt.Fprintf(os.Stderr, "Closing element %s without matching opener (%s) - possibly malformed XML\n", elementPopped, token.Name.Local)
-					os.Exit(1)
-				}
-
-				if elementPopped == CUSTOMER {
-					custMap[newCust.ID] = newCust
-					newCust = nil
-				}
-
-			case xml.CharData:
-				// XML data - populate the current work object based on XML data token (e.g. ID, model, make etc.)
-				if len(stack) > 0 && stack[len(stack)-1] == ID {
-					IDData, err := strconv.Atoi(strings.TrimSpace(string(token)))
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Customer ID: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newCust != nil {
-						newCust.ID = IDData
-
-					} else {
-						fmt.Fprintf(os.Stderr, "ID data(%d) detected without an active current Work struct instance. Possibly malformed XML.", IDData)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == FIRSTNAME {
-					FName := strings.TrimSpace(string(token))
-
-					if newCust != nil {
-						newCust.FirstName = FName
-					} else {
-						fmt.Fprintf(os.Stderr, "FirstName(%s) detected without an active current Work struct instance. Possibly malformed XML.", FName)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == LASTNAME {
-					LName := strings.TrimSpace(string(token))
-
-					if newCust != nil {
-						newCust.LastName = LName
-					} else {
-						fmt.Fprintf(os.Stderr, "LastName(%s) detected without an active current Work struct instance. Possibly malformed XML.", LName)
-						os.Exit(1)
-					}
-				}
-			}
-		}
-
-		page++
-		productAPILocation = fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/customers?limit=250&page=%d", page)
-		req, _ = http.NewRequest("GET", productAPILocation, nil)
-		req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
-		req.Header.Add("Content-Type", `application/json`)
-		apiDataResp, err = client.Do(req)
 	}
 
-	// -------------------------- get orders ------------------------------------------
-	page = 1
+	// fmt.Println("PageID: ", pageID)
+	customerList, err := GetCustomers(pageID)
+	if err != nil {
+		fmt.Fprintf(w, "<!DOCTYPE html><html><head><link rel='icon' type='image/png' href='data:image/png;base64,iVBORw0KGgo='></head><body>Error retrieving data | <a href='/'>home</a><body></html>")
+		return
+	}
 
-	ORDER := "order"
-	ID = "id"
-	CUST_ID := "customer_id"
-	VALUE := "total_ex_tax"
-	var newOrd *Order
-
-	productAPILocation = fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/orders?limit=250&page=%d", page)
-	req, _ = http.NewRequest("GET", productAPILocation, nil)
-	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
-	req.Header.Add("Content-Type", `application/json`)
-	apiDataResp, err = client.Do(req)
-
-	for err == nil && apiDataResp.StatusCode == http.StatusOK {
-		fmt.Println("Order API call (main)")
-		if err != nil {
-			// cannot get data - exit and show results so far
-			fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", productAPILocation, err)
-			apiDataResp.Body.Close()
+	custMap := map[int]Customer{}
+	for _, cust := range customerList {
+		_, exists := custMap[cust.CustID]
+		if !exists {
+			custMap[cust.CustID] = cust
 		}
+	}
 
-		if apiDataResp.StatusCode != http.StatusOK {
-			fmt.Fprintf(os.Stderr, "API request to URL %s failed: %s\n", productAPILocation, apiDataResp.Status)
-			apiDataResp.Body.Close()
+	ordersList := GetOrders(1, 0)
+	for _, ord := range ordersList {
+		cust, exists := custMap[ord.CustomerID]
+		if exists {
+			cust.CustTotal++
+			custMap[cust.CustID] = cust
 		}
+	}
 
-		// invalid orders page doesn't seem to give a non-OK HTTP response (unlike customer API), therefore ending iteration after first page
-		// if page == 2 {
-		// 	break
-		// }
+	// check if before/after API pages exist and provide back/next buttons
+	beforePage := APIPageValid(pageID - 1)
+	nextPage := APIPageValid(pageID + 1)
+	back := ""
+	next := ""
 
-		// decode read XML data body
-		dec := xml.NewDecoder(apiDataResp.Body)
-		// fmt.Println("Request successful")
+	if beforePage {
+		back = fmt.Sprintf("<a href='/page=%d'>back</a>", pageID-1)
+	}
 
-		var stack []string // we'll use a string slice as a stack data structure to pop on/off start/end elements as we read through the XML data body's tokens
-
-		for {
-			// get next XML token
-			token, err := dec.Token()
-
-			// handle any errors
-			if err == io.EOF {
-				// reached end of data
-				break
-			} else if err != nil {
-				fmt.Fprintf(os.Stderr, "Error reading XML data body token: %v\n", err)
-				os.Exit(1)
-			}
-
-			// switch statement to take selective action based on the current token (start, end or data)
-			switch token := token.(type) {
-			case xml.StartElement:
-				stack = append(stack, token.Name.Local)
-
-				if len(stack) > 0 && stack[len(stack)-1] == ORDER {
-					// start of a new <work> in XML data: create a new Work instance and pop in to the list of all customers
-					newOrd = createOrder()
-				}
-
-			case xml.EndElement:
-				// XML end element: pop off stack, and finalize current in-memory work object
-
-				// check if there are already XML opening tags stored in stack - if not, we've encountered a closing tag without an opening tag
-				if len(stack) <= 0 {
-					fmt.Fprintf(os.Stderr, "Attempting to pop an element(%s) without any on stack - possibly malformed XML\n", token.Name.Local)
-					os.Exit(1)
-				}
-
-				elementPopped := stack[len(stack)-1]
-				stack = stack[:len(stack)-1]
-
-				// check for XML consistency - if every end element should have had a corresponding start element
-				if elementPopped != token.Name.Local {
-					fmt.Fprintf(os.Stderr, "Closing element %s without matching opener (%s) - possibly malformed XML\n", elementPopped, token.Name.Local)
-					os.Exit(1)
-				}
-
-				if elementPopped == ORDER {
-					_, ok := custMap[newOrd.CustID]
-					if ok {
-						custMap[newOrd.CustID].Total++
-					}
-
-					newOrd = nil
-				}
-
-			case xml.CharData:
-				// XML data - populate the current work object based on XML data token (e.g. ID, model, make etc.)
-				if len(stack) > 0 && stack[len(stack)-1] == ID {
-					IDData, err := strconv.Atoi(strings.TrimSpace(string(token)))
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Order ID: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newOrd != nil {
-						newOrd.ID = IDData
-
-					} else {
-						fmt.Fprintf(os.Stderr, "ID data(%d) detected without an active current order struct instance. Possibly malformed XML (page = %d).", IDData, page)
-						os.Exit(1)
-						continue
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUST_ID {
-					IDData, err := strconv.Atoi(strings.TrimSpace(string(token)))
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Order Customer ID: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newOrd != nil {
-						newOrd.CustID = IDData
-
-					} else {
-						fmt.Fprintf(os.Stderr, "Customer ID data(%d) detected without an active current order struct instance. Possibly malformed XML.", IDData)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == VALUE {
-					IDData, err := strconv.ParseFloat(strings.TrimSpace(string(token)), 64)
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Order Value: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newOrd != nil {
-						newOrd.Value = IDData
-
-					} else {
-						fmt.Fprintf(os.Stderr, "value data(%d) detected without an active current order struct instance. Possibly malformed XML.", IDData)
-						os.Exit(1)
-					}
-				}
-			}
-		}
-
-		page++
-		productAPILocation = fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/orders?limit=250&page=%d", page)
-		req, _ = http.NewRequest("GET", productAPILocation, nil)
-		req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
-		req.Header.Add("Content-Type", `application/json`)
-		apiDataResp, err = client.Do(req)
+	if nextPage {
+		next = fmt.Sprintf("<a href='/page=%d'>next</a>", pageID+1)
 	}
 
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<table><thead><tr><th>CUSTOMER</th><th>ORDERS PLACED</th></tr></thead><tbody>"))
+	// Note: <link rel='icon' type='image/png' href='data:image/png;base64,iVBORw0KGgo='> part in the <head> prevents the HTTP handler function possibly getting called twice if the prowser decides to look for a favicon
+	b.WriteString(fmt.Sprintf("<!DOCTYPE html><html><head><link rel='icon' type='image/png' href='data:image/png;base64,iVBORw0KGgo='></head><body><table><thead><tr><th>CUSTOMER</th><th>ORDERS PLACED</th></tr></thead><tbody><tr><td>%s</td><td>%s</td></tr>", back, next))
 	for _, c := range custMap {
-		b.WriteString(fmt.Sprintf("<tr><td><a href='/customer/?id=%d'>%s %s</a></td><td>%d</td></tr>", c.ID, c.FirstName, c.LastName, c.Total))
+		b.WriteString(fmt.Sprintf("<tr><td><a href='/customer/?id=%d'>%s %s</a></td><td>%d</td></tr>", c.CustID, c.CustFN, c.CustLN, c.CustTotal))
 	}
 
-	b.WriteString("</tbody></table>")
+	b.WriteString("</tbody></table></body></html>")
 	fmt.Fprintf(w, b.String())
+	return
 }
 
-// handle customer page request for a specific customer (e.g. https://localhost/customer/<id>)
+// display customer page
 func customerHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Starting customerHandler()")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8") // send hypertext to the browser (responsewriter headers are plaintext by default)
-	// custID, err := strconv.Atoi(r.URL.Path[10:])               // strip '/customer/' from the URL path name and acquire customer ID
-	// if err != nil {
-	// 	// invalid customer ID
-	// 	fmt.Fprintf(w, "Invalid customer ID: %s | <a href='/'>back</a>", r.URL.Path[10:])
-	// 	return
-	// }
 
 	// capture Customer ID from URL
 	urlVals := r.URL.Query()
@@ -335,352 +107,23 @@ func customerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	custID, err := strconv.Atoi(custIDStr[0])
-	if err !=  nil {
+	if err != nil {
 		fmt.Fprintf(w, "Invalid customer ID | <a href='/'>back</a>")
 		return
 	}
 
-	client := &http.Client{} // HTTP client to make API requests
-	
-	// tokens of interest in the customer XML object
-	CUST := "customer"
-	ID := "id"
-	CUSTFN := "first_name"
-	CUSTLN := "last_name"
+	thisCust, err := GetCustomer(custID)
+	orders := GetOrders(1, custID)
 
-	var newCust *Customer
-	customers := []*Customer{}
-
-	customerAPILocation := fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/customers/%d", custID)
-	req, _ := http.NewRequest("GET", customerAPILocation, nil)
-	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
-	req.Header.Add("Content-Type", `application/json`)
-	apiDataResp, err := client.Do(req)
-	fmt.Println(apiDataResp.StatusCode)
-
-	if err == nil && apiDataResp.StatusCode == http.StatusOK {
-		fmt.Println("Getting customer detail for CustID:", custID)
-		if err != nil {
-			// cannot get data - exit and show results so far
-			fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", customerAPILocation, err)
-			apiDataResp.Body.Close()
-		}
-
-		if apiDataResp.StatusCode != http.StatusOK {
-			fmt.Fprintf(os.Stderr, "API request to URL %s failed: %s\n", customerAPILocation, apiDataResp.Status)
-			apiDataResp.Body.Close()
-		}
-
-		// decode read XML data body
-		dec := xml.NewDecoder(apiDataResp.Body)
-
-		var stack []string // we'll use a string slice as a stack data structure to pop on/off start/end elements as we read through the XML data body's tokens
-
-		for {
-			// get next XML token
-			token, err := dec.Token()
-
-			// handle any errors
-			if err == io.EOF {
-				// reached end of data
-				break
-			} else if err != nil {
-				fmt.Fprintf(os.Stderr, "Error reading XML data body token: %v\n", err)
-				os.Exit(1)
-			}
-
-			// switch statement to take selective action based on the current token (start, end or data)
-			switch token := token.(type) {
-			case xml.StartElement:
-				stack = append(stack, token.Name.Local)
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUST {
-					// start of a new <work> in XML data: create a new Work instance and pop in to the list of all customers
-					newCust = createCustomer()
-				}
-
-			case xml.EndElement:
-				// XML end element: pop off stack, and finalize current in-memory work object
-
-				// check if there are already XML opening tags stored in stack - if not, we've encountered a closing tag without an opening tag
-				if len(stack) <= 0 {
-					fmt.Fprintf(os.Stderr, "Attempting to pop an element(%s) without any on stack - possibly malformed XML\n", token.Name.Local)
-					os.Exit(1)
-				}
-
-				elementPopped := stack[len(stack)-1]
-				stack = stack[:len(stack)-1]
-
-				// check for XML consistency - if every end element should have had a corresponding start element
-				if elementPopped != token.Name.Local {
-					fmt.Fprintf(os.Stderr, "Closing element %s without matching opener (%s) - possibly malformed XML\n", elementPopped, token.Name.Local)
-					os.Exit(1)
-				}
-
-				if elementPopped == CUST {
-					customers = append(customers, newCust)
-					newCust = nil
-				}
-
-			case xml.CharData:
-				// XML data - populate the current work object based on XML data token (e.g. ID, model, make etc.)
-				if len(stack) > 0 && stack[len(stack)-1] == ID {
-					IDData, err := strconv.Atoi(strings.TrimSpace(string(token)))
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Order ID: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newCust != nil {
-						newCust.ID = IDData
-
-						if IDData != custID {
-							fmt.Fprintf(os.Stderr, "Received customer ID (%d) different from requested ID (%d)", IDData, custID)
-							os.Exit(1)
-						}
-
-					} else {
-						fmt.Fprintf(os.Stderr, "ID data(%d) detected without an active current customer struct instance. Possibly malformed XML.", IDData)
-						os.Exit(1)
-						continue
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUSTFN {
-					fn := strings.TrimSpace(string(token))
-
-					if newCust != nil {
-						newCust.FirstName = fn
-					} else {
-						fmt.Fprintf(os.Stderr, "First name (customer) (%s) detected without an active current customer struct instance. Possibly malformed XML.", fn)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUSTLN {
-					ln := strings.TrimSpace(string(token))
-
-					if newCust != nil {
-						newCust.LastName = ln
-					} else {
-						fmt.Fprintf(os.Stderr, "Last name (order) (%s) detected without an active current order struct instance. Possibly malformed XML.", ln)
-						os.Exit(1)
-					}
-				}
-			}
-		}
-	} else {
-		fmt.Fprintf(w, "Invalid request ksdaksdj | <a href='/'>back</a>")
-		return
+	var custLifeTimeVal float64 = 0
+	for _, order := range orders {
+		custLifeTimeVal += order.TotalExTax
 	}
 
-	if len(customers) != 1 {
-		fmt.Fprintf(w, "%d customers returned for one ID (%d) | <a href='/'>back</a>", len(customers), custID)
-		return
-	}
-
-	page := 1                // pagination value for iterating through orders API
-	custLifeTimeVal := 0.0   // order total for this customer
-
-	// initialize XML token values for parsing orders XML
-	ORDER := "order"
-	ID = "id"
-	CUST_ID := "customer_id"
-	VALUE := "total_ex_tax"
-	DATE := "date_created"
-	STATUS := "status"	
-
-	// placeholder for each order object read and list of orders
-	var newOrd *Order
-	orders := []*Order{}
-
-	// get data from first page of orders for this customer
-	ordersAPILocation := fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/orders?customer_id=%d&limit=250&page=%d", custID, page)
-	req, _ = http.NewRequest("GET", ordersAPILocation, nil)
-	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
-	req.Header.Add("Content-Type", `application/json`)
-	apiDataResp, err = client.Do(req)
-
-	for err == nil && apiDataResp.StatusCode == http.StatusOK {
-		fmt.Println("Order API call (customers)")
-		if err != nil {
-			// cannot get data - exit and show results so far
-			fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", ordersAPILocation, err)
-			apiDataResp.Body.Close()
-		}
-
-		if apiDataResp.StatusCode != http.StatusOK {
-			fmt.Fprintf(os.Stderr, "API request to URL %s failed: %s\n", ordersAPILocation, apiDataResp.Status)
-			apiDataResp.Body.Close()
-		}
-
-		// decode read XML data body
-		dec := xml.NewDecoder(apiDataResp.Body)
-
-		var stack []string // we'll use a string slice as a stack data structure to pop on/off start/end elements as we read through the XML data body's tokens
-
-		for {
-			// get next XML token
-			token, err := dec.Token()
-
-			// handle any errors
-			if err == io.EOF {
-				// reached end of data
-				break
-			} else if err != nil {
-				fmt.Fprintf(os.Stderr, "Error reading XML data body token: %v\n", err)
-				os.Exit(1)
-			}
-
-			// switch statement to take selective action based on the current token (start, end or data)
-			switch token := token.(type) {
-			case xml.StartElement:
-				stack = append(stack, token.Name.Local)
-
-				if len(stack) > 0 && stack[len(stack)-1] == ORDER {
-					// start of a new <work> in XML data: create a new Work instance and pop in to the list of all customers
-					newOrd = createOrder()
-				}
-
-			case xml.EndElement:
-				// XML end element: pop off stack, and finalize current in-memory work object
-
-				// check if there are already XML opening tags stored in stack - if not, we've encountered a closing tag without an opening tag
-				if len(stack) <= 0 {
-					fmt.Fprintf(os.Stderr, "Attempting to pop an element(%s) without any on stack - possibly malformed XML\n", token.Name.Local)
-					os.Exit(1)
-				}
-
-				elementPopped := stack[len(stack)-1]
-				stack = stack[:len(stack)-1]
-
-				// check for XML consistency - if every end element should have had a corresponding start element
-				if elementPopped != token.Name.Local {
-					fmt.Fprintf(os.Stderr, "Closing element %s without matching opener (%s) - possibly malformed XML\n", elementPopped, token.Name.Local)
-					os.Exit(1)
-				}
-
-				if elementPopped == ORDER {
-					orders = append(orders, newOrd)
-					newOrd = nil
-				}
-
-			case xml.CharData:
-				// XML data - populate the current work object based on XML data token (e.g. ID, model, make etc.)
-				if len(stack) > 0 && stack[len(stack)-1] == ID {
-					IDData, err := strconv.Atoi(strings.TrimSpace(string(token)))
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Order ID: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newOrd != nil {
-						newOrd.ID = IDData
-
-					} else {
-						fmt.Fprintf(os.Stderr, "ID data(%d) detected without an active current order struct instance. Possibly malformed XML (page = %d).", IDData, page)
-						os.Exit(1)
-						continue
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUST_ID {
-					IDData, err := strconv.Atoi(strings.TrimSpace(string(token)))
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Order Customer ID: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newOrd != nil {
-						newOrd.CustID = IDData
-
-					} else {
-						fmt.Fprintf(os.Stderr, "Customer ID data(%d) detected without an active current order struct instance. Possibly malformed XML.", IDData)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == VALUE {
-					IDData, err := strconv.ParseFloat(strings.TrimSpace(string(token)), 64)
-
-					if err != nil {
-						fmt.Fprintf(os.Stderr, "Error converting Order Value: %v\n", err)
-						os.Exit(1)
-					}
-
-					if newOrd != nil {
-						custLifeTimeVal += IDData
-						newOrd.Value = IDData
-
-					} else {
-						fmt.Fprintf(os.Stderr, "value data(%d) detected without an active current order struct instance. Possibly malformed XML.", IDData)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == DATE {
-					orderDate := strings.TrimSpace(string(token))
-
-					if newOrd != nil {
-						newOrd.Date = orderDate
-					} else {
-						fmt.Fprintf(os.Stderr, "Order date(%s) detected without an active current order struct instance. Possibly malformed XML.", orderDate)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == STATUS {
-					status := strings.TrimSpace(string(token))
-
-					if newOrd != nil {
-						newOrd.Status = status
-					} else {
-						fmt.Fprintf(os.Stderr, "Oder status(%s) detected without an active current order struct instance. Possibly malformed XML.", status)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUSTFN {
-					fn := strings.TrimSpace(string(token))
-
-					if newOrd != nil {
-						newOrd.CustFN = fn
-					} else {
-						fmt.Fprintf(os.Stderr, "First name (order) (%s) detected without an active current order struct instance. Possibly malformed XML.", fn)
-						os.Exit(1)
-					}
-				}
-
-				if len(stack) > 0 && stack[len(stack)-1] == CUSTLN {
-					ln := strings.TrimSpace(string(token))
-
-					if newOrd != nil {
-						newOrd.CustLN = ln
-					} else {
-						fmt.Fprintf(os.Stderr, "Last name (order) (%s) detected without an active current order struct instance. Possibly malformed XML.", ln)
-						os.Exit(1)
-					}
-				}
-			}
-		}
-
-		// read next page of orders API for this customer
-		page++
-		ordersAPILocation = fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/orders?customer_id=%d&limit=250&page=%d", custID, page)
-		req, _ = http.NewRequest("GET", ordersAPILocation, nil)
-		req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
-		req.Header.Add("Content-Type", `application/json`)
-		apiDataResp, err = client.Do(req)
-	}
-
-	// prepare orders HTML for web interface display
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("<h2>%s %s</h2><b>Lifetime Value: $%.2f</b> | <a href='/'>back</a><br /><br /><table border='1'><thead><tr><th>ORDER ID</th><th>PLACED</th><th>STATUS</th><th>TOTAL</th></tr></thead><tbody>", customers[0].FirstName, customers[0].LastName, custLifeTimeVal))
+	b.WriteString(fmt.Sprintf("<h2>%s %s</h2><b>Lifetime Value: $%.2f</b> | <a href='/'>back</a><br /><br /><table border='1'><thead><tr><th>ORDER ID</th><th>PLACED</th><th>STATUS</th><th>TOTAL</th></tr></thead><tbody>", thisCust.CustFN, thisCust.CustLN, custLifeTimeVal))
 	for _, c := range orders {
-		b.WriteString(fmt.Sprintf("<tr><td>%d</td><td>%s</td><td>%s</td><td>$%.2f</td></tr>", c.ID, c.Date, c.Status, c.Value))
+		b.WriteString(fmt.Sprintf("<tr><td>%d</td><td>%s</td><td>%s</td><td>$%.2f</td></tr>", c.OrderID, c.DateCreated, c.OrderStatus, c.TotalExTax))
 	}
 
 	if len(orders) == 0 {
@@ -693,43 +136,187 @@ func customerHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// type struct representing a customer
+// check if a given customer API page is valid
+func APIPageValid(page int) bool {
+	if page <= 0 {
+		return false
+	}
+
+	pageSize := 50
+	client := &http.Client{} // HTTP client to make API reqs
+	APILocation := fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/customers?limit=%d&page=%d", pageSize, page)
+	req, _ := http.NewRequest("GET", APILocation, nil)
+	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
+	req.Header.Add("Content-Type", `application/json`)
+	apiDataResp, err := client.Do(req)
+	defer apiDataResp.Body.Close()
+
+	if err == nil && apiDataResp.StatusCode == http.StatusOK {
+		// valid API page
+		return true
+	} else {
+		return false
+	}
+}
+
+func GetCustomer(customerID int) (Customer, error) {
+	client := &http.Client{} // HTTP client to make API reqs
+	customerAPILocation := fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/customers/%d", customerID)
+	req, _ := http.NewRequest("GET", customerAPILocation, nil)
+	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
+	req.Header.Add("Content-Type", `application/json`)
+	apiDataResp, err := client.Do(req)
+	defer apiDataResp.Body.Close()
+
+	var cust Customer
+
+	if err == nil && apiDataResp.StatusCode == http.StatusOK {
+		xmlData, err := ioutil.ReadAll(apiDataResp.Body)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading API response: %v\n", err)
+			os.Exit(1)
+		}
+
+		// fmt.Println(string(xmlData))
+		unmarshalError := xml.Unmarshal(xmlData, &cust)
+		if unmarshalError != nil {
+			fmt.Println("Error unmarshalling")
+			fmt.Fprintf(os.Stderr, "%v", unmarshalError)
+			// os.Exit(1)
+			return cust, unmarshalError
+		}
+
+		return cust, nil
+	} else {
+		if err != nil {
+			// request error
+			fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", customerAPILocation, err)
+		} else {
+			// HTTP non-200
+			err = errors.New(fmt.Sprintf("Non OK HTTP status %v retriving %s\n", apiDataResp.StatusCode, customerAPILocation))
+			fmt.Println(err)
+		}
+		return cust, err
+	}
+}
+
+func GetCustomers(page int) ([]Customer, error) {
+	if page <= 0 {
+		page = 1
+	}
+
+	pageSize := 50
+
+	client := &http.Client{} // HTTP client to make API reqs
+	customerAPILocation := fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/customers?limit=%d&page=%d", pageSize, page)
+	req, _ := http.NewRequest("GET", customerAPILocation, nil)
+	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
+	req.Header.Add("Content-Type", `application/json`)
+	apiDataResp, err := client.Do(req)
+	defer apiDataResp.Body.Close()
+
+	var customerList Customers
+
+	if err == nil && apiDataResp.StatusCode == http.StatusOK {
+		xmlData, err := ioutil.ReadAll(apiDataResp.Body)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading API response: %v\n", err)
+			os.Exit(1)
+		}
+
+		// fmt.Println(string(xmlData))
+		unmarshalError := xml.Unmarshal(xmlData, &customerList)
+		if unmarshalError != nil {
+			fmt.Println("Error unmarshalling")
+			fmt.Fprintf(os.Stderr, "%v", unmarshalError)
+			os.Exit(1)
+		}
+	} else {
+		if err != nil {
+			// request error
+			fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", customerAPILocation, err)
+		} else {
+			// HTTP non-200
+			err = errors.New(fmt.Sprintf("Non OK HTTP status %v retriving %s\n", apiDataResp.StatusCode, customerAPILocation))
+			fmt.Println(err)
+		}
+		return nil, err
+	}
+
+	return customerList.CustomersList, nil
+}
+
+func GetOrders(page int, customerID int) []Order {
+	if page <= 0 {
+		page = 1
+	}
+
+	client := &http.Client{} // HTTP client to make API reqs`
+	// page := 1
+
+	var productAPILocation string
+	if customerID > 0 {
+		// get orders for a sepcific customer
+		productAPILocation = fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/orders?customer_id=%d&limit=250&page=%d", customerID, page)
+	} else {
+		productAPILocation = fmt.Sprintf("https://store-velgoi8q0k.mybigcommerce.com/api/v2/orders?limit=250&page=%d", page)
+	}
+
+	req, _ := http.NewRequest("GET", productAPILocation, nil)
+	req.Header.Add("Authorization", `Basic dGVzdDoyNTI1ZGY1NjQ3N2Y1OGU1ODY4YzI0MGVlNTIyOGIwYjVkNDM2N2M0`)
+	req.Header.Add("Content-Type", `application/json`)
+	apiDataResp, err := client.Do(req)
+	defer apiDataResp.Body.Close()
+	var orderList Orders
+
+	if err == nil && apiDataResp.StatusCode == http.StatusOK {
+		// dec := xml.NewDecoder(apiDataResp.Body)
+
+		xmlData, err := ioutil.ReadAll(apiDataResp.Body)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading API response: %v\n", err)
+			os.Exit(1)
+		}
+		// fmt.Println(string(xmlData))
+		unmarshalError := xml.Unmarshal(xmlData, &orderList)
+		if unmarshalError != nil {
+			fmt.Println("Error unmarshalling")
+			fmt.Fprintf(os.Stderr, "%v", unmarshalError)
+			os.Exit(1)
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "Error fetching data from API URL (%s): %v\n", productAPILocation, err)
+		apiDataResp.Body.Close()
+		os.Exit(1)
+	}
+
+	// for _, v := range orderList.OrdersList {
+	// 	fmt.Println(v.OrderID, v.CustomerID, v.DateCreated, v.TotalExTax)
+	// }
+
+	return orderList.OrdersList
+}
+
+type Customers struct {
+	CustomersList []Customer `xml:"customer"`
+}
+
 type Customer struct {
-	ID        int
-	FirstName string
-	LastName  string
-	Total     int
+	CustID    int    `xml:"id"`
+	CustFN    string `xml:"first_name"`
+	CustLN    string `xml:"last_name"`
+	CustEmail string `xml:"email"`
+	CustTotal int
 }
 
-// type struct representing an order
+type Orders struct {
+	OrdersList []Order `xml:"order"`
+}
+
 type Order struct {
-	ID     int
-	CustID int
-	Value  float64
-	Date   string
-	Status string
-	CustFN string
-	CustLN string
+	OrderID     int     `xml:"id"`
+	CustomerID  int     `xml:"customer_id"`
+	DateCreated string  `xml:"date_created"`
+	TotalExTax  float64 `xml:"total_ex_tax"`
+	OrderStatus string  `xml:"status"`
 }
-
-// constructor for orders struct
-func createOrder() *Order {
-	var w Order
-	w.ID = -1
-	w.CustID = -1
-	w.Value = 0.0
-
-	return &w
-}
-
-// constructor for customers struct
-func createCustomer() *Customer {
-	var w Customer
-	w.ID = -1
-	w.FirstName = ""
-	w.LastName = ""
-
-	return &w
-}
-
-/* ◬ */
