@@ -10,7 +10,8 @@ import (
 )
 
 func main () {
-	
+	testcase := []int{3,2,1,6,5,4,9,8,4,6,5,1,4,3,2,5,1,6,8,5,4,9,8,7,9,8,7,6,8,7,4,3,6,5,4}
+	fmt.Println(DNFGrouping(testcase, 5))
 }
 
 func DNFGrouping(input []int, pivot int) ([]int, error) {
@@ -18,6 +19,7 @@ func DNFGrouping(input []int, pivot int) ([]int, error) {
 		return nil, errors.New(fmt.Sprintf("DNFGrouping(): pivot (%d) outside valid range.", pivot))
 	}
 
+	// not in place - O(n) space
 	res := []int{}
 	low := []int{}
 	equal := []int{}
@@ -38,7 +40,13 @@ func DNFGrouping(input []int, pivot int) ([]int, error) {
 		}
 	}
 
+	fmt.Println("\tLow:", low)
+	fmt.Println("\tEqual:", equal)
+	fmt.Println("\tLarge:", large)
+
 	res = append(res, low...)
 	res = append(res, equal...)
 	res = append(res, large...)
+
+	return res, nil
 }
