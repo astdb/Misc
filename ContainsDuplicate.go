@@ -33,6 +33,7 @@ func main()  {
 	// 	fmt.Println(test, containsDuplicate2(test))
 	// }
 
+	// test function performances against large input
 	bigArray := []int{}
 	for i := 0; i < 1000000; i++ {
 		bigArray = append(bigArray, rand.Intn(1000))
@@ -51,8 +52,12 @@ func main()  {
 	fmt.Println("Elapsed time(ms):", end2.Sub(start2))
 }
 
+// sort-based approach (space efficient)
 func containsDuplicate1(nums []int) bool {
+	// sort input
 	sort.Ints(nums)	
+
+	// check for consequent duplicate elements
 	for i := 0; i <= len(nums)-2; i++ {
 		if nums[i] == nums[i+1] {
 			return true
@@ -62,14 +67,19 @@ func containsDuplicate1(nums []int) bool {
 	return false
 }
 
+// map-based approach (runtime efficient)
 func containsDuplicate2(nums []int) bool {
+	// declare map to store element counts
 	m := map[int]int{}
 
+	// per element in input
 	for _, i := range nums {
+		// check if in map already, if yes: duplicate
 		_, exists := m[i]
 		if exists {
 			return true
 		} else {
+			// if not in map, insert
 			m[i] = 1
 		}
 	}
