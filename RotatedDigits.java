@@ -74,7 +74,14 @@ public class RotatedDigits {
   }
 
   public static int getValue(List<Integer> n) {
-      
+      double power = 0.0;
+      int val = 0;
+      for(int x: n) {
+          val += x * (int)Math.pow(10.0, power);
+          power++;
+      }
+
+      return val;
   }
 
   public static boolean rotatable(int n) {
