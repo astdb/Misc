@@ -70,7 +70,7 @@ func kClosest(points [][]int, K int) [][]int {
 	return result
 }
 
-// helper function to get distabnce to the center from a given catesian point
+// helper function to get distance to the center from a given cartesian point
 func GetCenterDist(point []int) float64 {
 	x := point[0]
 	y := point[1]
@@ -78,7 +78,7 @@ func GetCenterDist(point []int) float64 {
 	return math.Sqrt((float64(x*x) + float64(y*y)))
 }
 
-// struct representing catesian point with distance to center
+// struct representing cartesian point with distance to center
 type PointWithDist struct {
 	Coords []int
 	Dist   float64
