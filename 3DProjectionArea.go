@@ -67,9 +67,12 @@ func projectionArea(grid [][]int) int {
 	// list of tallest columns when viewd from North/South (XY) side
 	xyAreas := []int{}
 
+	areaZXDebug := 0
+	areaYZDebug := 0
+
 	// calculate West/East (yz) projection area
 	for i := 0; i < len(grid); i++ {
-		// tallest found in grid[i] - West/East
+		// tallest found in grid[i] - West/East		
 		areaYZ := 0
 
 		for j := 0; j < len(grid[i]); j++ {
@@ -80,6 +83,7 @@ func projectionArea(grid [][]int) int {
 			if grid[i][j] > 0 {
 				// add to Up/Down projection area (each nonzero cube column would form an up/won projection area of one unit)
 				totalProjectionArea += 1
+				areaZXDebug += 1
 			}
 
 			// update north/south areas list
@@ -91,13 +95,21 @@ func projectionArea(grid [][]int) int {
 		}
 
 		// add West/East (YZ) area component to total
+		areaYZDebug += areaYZ
 		totalProjectionArea += areaYZ
+		
 	}
 
 	// add north/south are to total
+	areaXYDebug := 0
 	for _, xyAreaVal := range xyAreas {
 		totalProjectionArea += xyAreaVal
+		areaXYDebug += xyAreaVal
 	}
+	fmt.Printf("Input: %v\n", grid)
+	fmt.Printf("\tAreaYZ: %d\n", areaYZDebug)
+	fmt.Printf("\tAreaXY: %d\n", areaXYDebug)
+	fmt.Printf("\tAreaZX: %d\n", areaZXDebug)
 
 	return totalProjectionArea
 
