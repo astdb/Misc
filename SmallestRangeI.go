@@ -33,10 +33,50 @@ func main() {
 	tests := [][][]int{{{1}, {0}}, {{0, 10}, {2}}, {{1, 3, 6}, {3}}, {{2, 7, 2}, {1}}}
 
 	for _, test := range tests {
-		fmt.Printf("%d\n", smallestRangeI(test[0], test[1][0]))
+		// fmt.Printf("%d\n", smallestRangeI(test[0], test[1][0]))
+		fmt.Printf("%d\n", smallestRangeI2(test[0], test[1][0]))
 	}
 }
 
+// correct
+func smallestRangeI2(A []int, K int) int {
+	// find the largest and smallest elements of A
+	largest := 0
+	smallest := 0
+
+	for k, v := range A {
+		if k == 0 {
+			// initialize largest/smallest
+			largest = v
+			smallest = v
+		} else {
+			// update largest/smallest values
+			if v > largest {
+				largest = v
+			}
+
+			if v < smallest {
+				smallest = v
+			}
+		}
+	}
+
+	// if the largest and smallest can be decreased/increased to the same value with K, return 0
+	// else, return the closest they can be brought to
+	if (smallest + K) >= (largest - K) {
+		return 0
+	} else {
+		diff := largest - smallest
+
+		if diff/2 > K {
+			return (largest - K) - (smallest + K)
+		}
+
+		return (largest - (diff / 2)) - (smallest + (diff / 2))
+	}
+}
+
+// incorrect
 func smallestRangeI(A []int, K int) int {
 	// sort slice (to find median)
 	sort.Ints(A)
