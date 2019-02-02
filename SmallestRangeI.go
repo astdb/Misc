@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	tests := [][][]int{{{1}, {0}}, {{0, 10}, {2}}, {{1, 3, 6}, {3}}}
+	tests := [][][]int{{{1}, {0}}, {{0, 10}, {2}}, {{1, 3, 6}, {3}}, {{2, 7, 2}, {1}}}
 
 	for _, test := range tests {
 		fmt.Printf("%d\n", smallestRangeI(test[0], test[1][0]))
@@ -54,30 +54,43 @@ func smallestRangeI(A []int, K int) int {
 		}
 	}
 
+	fmt.Printf("-------------------\nA: %v\nK: %d\n", A, K)
+	fmt.Printf("\nMedian:%d\n", median)
+
 	var smallest int
 	var largest int
 
 	for k, v := range A {
+		fmt.Printf("\n\tIndex: %d, Value: %d\n", k, v)
 		var newV int
 		if v > median {
 			// need to add a negative amount
-
+			fmt.Println("\tValue greater than median, need to be reduced..")
 			if v-median < K {
 				// v can be brought down to median value
 				newV = median
+				fmt.Printf("\tValue can be brought down to median (%d)\n", newV)
 			} else {
 				// this is the closest we can bring v to median
 				newV = v - K
+				fmt.Printf("\tClosest value can be brought down to median is %d\n", newV)
 			}
 		} else if v < median {
 			// need to add a positive amount
+			fmt.Println("\tValue less than median, need to be increased..")
 			if median-v < K {
 				// v can be brought up to median value
 				newV = median
+				fmt.Printf("\tValue can be brought up to median (%d)\n", newV)
 			} else {
 				// closest v can be brought to median
 				newV = v + K
+				fmt.Printf("\tClosest value can be brought up to median is %d\n", newV)
 			}
+		} else {
+			// v == median
+			fmt.Printf("\tMedian (%d) == Value (%d), no increment/decrement required.", median, v)
+			newV = v
 		}
 
 		// keep track of largest and smallest newV values
@@ -93,6 +106,8 @@ func smallestRangeI(A []int, K int) int {
 				largest = newV
 			}
 		}
+
+		fmt.Printf("\n\tCurrent Largest: %d\n\tCurrent Smallest: %d\n", largest, smallest)
 	}
 
 	return largest - smallest
