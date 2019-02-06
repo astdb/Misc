@@ -1,6 +1,6 @@
 /*
 Given two singly-linked, sorted lists, merge them into one.
-Only field allowed to modify is a node's next field.
+Only field allowed to be modified is a node's next field.
 */
 
 package main
@@ -19,6 +19,9 @@ func main() {
 	y := NewListNode(3)
 	y.Next = NewListNode(11)
 
+	PrintList(x)
+	PrintList(y)
+
 	PrintList(MergeLists(x, y))
 
 }
@@ -26,17 +29,22 @@ func main() {
 func MergeLists(x, y *ListNode) *ListNode {
 	// which node to start with
 	var NewList *ListNode
+	var NewListHead *ListNode
 
 	firstRun := true
 	for x != nil || y != nil {
 		if firstRun {
 			if x.Val > y.Val {
+				// fmt.Printf("Setting Y as head (%d)\n", y.Val)
 				NewList = NewListNode(y.Val)
 				y = y.Next
 			} else {
+				// fmt.Printf("Setting X as head (%d)\n", x.Val)
 				NewList = NewListNode(x.Val)
 				x = x.Next
 			}
+
+			NewListHead = NewList
 
 			firstRun = false
 		}
@@ -44,23 +52,31 @@ func MergeLists(x, y *ListNode) *ListNode {
 		if x != nil && y != nil {
 			if x.Val > y.Val {
 				// NewList = NewListNode(y.Val)
+				// fmt.Printf("\nInserting (%d) from Y\n", y.Val)
 				NewList.Next = y
+				NewList = NewList.Next
 				y = y.Next
 			} else {
 				// NewList = NewListNode(x.Val)
+				// fmt.Printf("\nInserting (%d) from X\n", x.Val)
 				NewList.Next = x
+				NewList = NewList.Next
 				x = x.Next
 			}
 
 		} else if x != nil {
 			NewList.Next = x
+			NewList = NewList.Next
+			x = x.Next
 
 		} else if y != nil {
 			NewList.Next = y
+			NewList = NewList.Next
+			y = y.Next
 		}
 	}
 
-	return NewList
+	return NewListHead
 }
 
 type ListNode struct {
