@@ -38,6 +38,8 @@ func main() {
 
 }
 
+var f = true
+
 func invertTree(root *TreeNode) *TreeNode {
 	// Extract elements preorder (Root, LR)
 	// insert back, in inverted order (larger to left, smaller to right)
@@ -47,7 +49,10 @@ func invertTree(root *TreeNode) *TreeNode {
 	elements = preOrderExtract(root, elements)
 
 	// insert elements back
-	root = nil
+	// root = nil
+	
+	// initialize to anything, maipulate within insert
+	root = NewTreeNode(1)
 
 	for _, v := range elements {
 		insertTree(root, v)
@@ -57,12 +62,15 @@ func invertTree(root *TreeNode) *TreeNode {
 }
 
 func insertTree(node *TreeNode, val int) {
-	if node == nil {
+	// if node == nil {
+	if f {
 		node = NewTreeNode(val)
+		f = false
 	} else {
 		if val > node.Val {
 			node = node.Left
 			insertTree(node, val)
+
 		} else {
 			node = node.Right
 			insertTree(node, val)
