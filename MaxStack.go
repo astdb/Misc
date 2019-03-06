@@ -1,65 +1,111 @@
 /*
 Implement a stack that includes a max operation in addition to push and pop.
-It would return the maximum element stored in the stack.
 */
-
 
 package main
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
+	"log"
 )
 
 func main() {
+	// create stack
+	testStack := NewStack()
 
-}
+	testStack.push(1)
+	testStack.push(2)
+	testStack.push(3)
+	testStack.push(4)
+	testStack.push(5)
+	testStack.print()
 
-// ----------------- stack struct and methods ----------------------
-func NewStack() *Stack {
-	var s Stack
-	s.store = []int{}
-	s.maxSet = false
-	return 
+	m, err := testStack.Max()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Max: %d\n", m)
+
+	testStack.pop()
+	testStack.print()
+	m, err = testStack.Max()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Max: %d\n", m)
+
 }
 
 type Stack struct {
-	var store []int
-	maxSet bool
-	var max int
+	Store   []int
+	MaxList []int
 }
 
-func (s *Stack) Push(v int) {
-	if !s.maxSet {
-		s.max = v		
+func NewStack() *Stack {
+	var s Stack
+	s.Store = []int{}
+	s.MaxList = []int{}
+	return &s
+}
+
+func (s *Stack) Max() (int, error) {
+	if !s.isEmpty() {
+		return s.MaxList[len(s.MaxList)-1], nil
 	} else {
-		if v > s.max {
-			s.max = v
+		return 0, errors.New("Max() called on empty stack.")
+	}
+}
+
+func (s *Stack) push(x int) {
+	if !s.isEmpty() {
+		s.Store = append(s.Store, x)
+
+		if x > s.MaxList[len(s.MaxList)-1] {
+			s.MaxList = append(s.MaxList, x)
+		} else {
+			s.MaxList = append(s.MaxList, s.MaxList[len(s.MaxList)-1])
 		}
+	} else {
+		// first insert
+		s.Store = append(s.Store, x)
+		s.MaxList = append(s.MaxList, x)
 	}
 
-	s.store = append(s.store, v)
 }
 
-func (s *Stack) Pop() (int, error) {
-	if !s.Empty() {
-		top := s.store[]
-		s.store = s.store[:len(s.store-1)]
-		return top, nil
+func (s *Stack) pop() int {
+	topVal := s.Store[len(s.Store)-1]
+	s.Store = s.Store[:len(s.Store)-1]
+	s.MaxList = s.MaxList[:len(s.MaxList)-1]
+
+	return topVal
+}
+
+func (s *Stack) peek() (int, error) {
+	if !s.isEmpty() {
+		return s.Store[len(s.Store)-1], nil
+	} else {
+		return 0, errors.New("Peek called on empty stack")
 	}
-
-	return nil, errors.New("Attempted Pop() from empty stack.")
-	
 }
 
-func (s *Stack) Empty() bool {
-	if len(s.store) == 0 {
+func (s *Stack) isEmpty() bool {
+	if len(s.Store) <= 0 {
 		return true
 	}
 
-return false
+	return false
 }
 
-func (s *Stack) Max() int {
-	return s.max
+func (s *Stack) print() {
+	if !s.isEmpty() {
+		for _, v := range s.Store {
+			fmt.Printf("%d ", v)
+		}
+
+		fmt.Printf("\n")
+	} else {
+		fmt.Println("Empty stack")
+	}
 }
