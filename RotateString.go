@@ -18,11 +18,28 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
+func main() {
+	tests := [][]string{{"abcde", "cdeab"}, {"abcde", "abced"}}
 
-
-func rotateString(A string, B string) bool {
-    
+	for _, test := range tests {
+		fmt.Printf("rotateString(%s, %s) == %v\n", test[0], test[1], rotateString(test[0], test[1]))
+	}
 }
 
+func rotateString(A string, B string) bool {
+	if A == B {
+		return true
+	}
+
+	for x := len(A) - 1; x >= 0; x-- {
+		if len(A) == len(B) && strings.Contains(B, A[x:]) && strings.Contains(B, A[:x]) {
+			return true
+		}
+	}
+
+	return false
+
+}
