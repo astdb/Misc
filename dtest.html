@@ -1,0 +1,40 @@
+<html>
+<head><title>Date Test</title></head>
+<body>
+    <ul>
+        <li>https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date</li>
+        <li>https://stackoverflow.com/questions/6525538/convert-utc-date-time-to-local-date-time</li>
+    </ul>
+</body>
+<script>
+    // create JavaScript Date object using the UTC time string from StackStorm API
+    var timeStampStr = "2019-11-01T02:28:00.000000Z";
+    timeStampStr = "2019-10-31T22:08:02.000000Z";
+    console.log(timeStampStr);
+
+    // print date - when run in a browser, will output the equivalent local date/time 
+    var dateObj = new Date(timeStampStr);
+    console.log(dateObj.toString());
+
+
+    // formatted output of local date/time
+
+    // read month/hour/minute as strings (+1 for month as Date months are zero-indexed)
+    var month = '' + (dateObj.getMonth() + 1); 
+    var hh = '' + (dateObj.getHours());
+    var mm = '' + (dateObj.getMinutes());
+
+    // lead zero-pad single digit hour/minute values for readability
+    if(hh.length < 2) {
+        hh = '0' + hh;
+    }
+
+    if(mm.length < 2) {
+        mm = '0' + mm;
+    }
+
+    // print formatted date
+    console.log(dateObj.getDate() + "/" + month + "/" + dateObj.getFullYear() + " " + hh + ":" + mm);
+
+</script>
+</html>
