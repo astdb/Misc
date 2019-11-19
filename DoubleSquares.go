@@ -39,6 +39,7 @@ func main() {
 
 	inputFileScanner := bufio.NewScanner(inputFile)
 	lineNo := 0
+	testCases := 0
 
 	var str strings.Builder
 	for inputFileScanner.Scan() {
@@ -49,8 +50,13 @@ func main() {
 		}
 
 		if lineNo == 0 {
+			testCases = num
 			lineNo++
 			continue
+		}
+
+		if lineNo > testCases {
+			break
 		}
 
 		y := 0
