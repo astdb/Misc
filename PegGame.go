@@ -40,6 +40,10 @@ func main() {
 				log.Fatal(err)
 			}
 
+			if testCases < 1 || testCases > 100 {
+				log.Fatal("N outside parameters.")
+			}
+
 			str.WriteString(fmt.Sprintf("%d\n", testCases))
 		} else {
 			inputLineComponents := strings.Split(inputLine, " ")
@@ -54,6 +58,14 @@ func main() {
 				c, err := strconv.Atoi(strings.TrimSpace(inputLineComponents[1]))
 				if err != nil {
 					log.Fatal(err)
+				}
+
+				if r < 3 || r > 100 {
+					log.Fatal("R outside parameters.")
+				}
+
+				if c < 3 || c > 100 {
+					log.Fatal("C outside parameters.")
 				}
 
 				k, err := strconv.Atoi(strings.TrimSpace(inputLineComponents[2]))
