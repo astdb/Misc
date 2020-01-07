@@ -39,7 +39,6 @@ func main() {
 
 			}
 
-			// str.WriteString(fmt.Sprintf("%d\n", testCases))
 			lineNo++
 			continue
 		} else {
@@ -47,7 +46,7 @@ func main() {
 			testCase := strings.TrimSpace(inputFileScanner.Text())
 
 			// go through testcase char by char, and count the number of times each letter was seen
-			// need two C's for every single HACKERCUP, so count C's in doubles.
+			// note: need two C's for every single HACKERCUP, so count C's in doubles.
 			letterCounts := []int{0, 0, 0, 0, 0, 0, 0, 0}
 			subC := 0
 
@@ -67,7 +66,7 @@ func main() {
 						letterCounts[2]++
 						subC = 0
 					}
-					
+
 				}
 
 				if string(ch) == "K" {
@@ -90,29 +89,6 @@ func main() {
 					letterCounts[7]++
 				}
 			}
-
-			// formations := 0
-			// if allLettersFound(letterCounts) {
-			// 	cCount := letterCounts[2]
-			// 	min := 0
-			// 	for i, j := range letterCounts {
-			// 		if i == 0 {
-			// 			min = j
-			// 		} else {
-			// 			if j < min {
-			// 				min = j
-			// 			}
-			// 		}
-			// 	}
-
-			// 	if cCount >= (min * 2) {
-			// 		formations = cCount
-			// 	} else if min >= (cCount / 2) {
-			// 		formations = cCount / 2
-			// 	} else {
-			// 		log.Printf("Weird situation: min == %d, cCount == %d, formations == %d\n", min, cCount, formations)
-			// 	}
-			// }
 
 			// find the least occuring required letter - that would be the number of full HACKERCUPs that can be formed with the letters alread in the soup
 			possibleWordFormations := 0
@@ -151,14 +127,4 @@ func main() {
 	}
 
 	outputFile.Sync()
-}
-
-func allLettersFound(letters []int) bool {
-	for _, i := range letters {
-		if i <= 0 {
-			return false
-		}
-	}
-
-	return true
 }
