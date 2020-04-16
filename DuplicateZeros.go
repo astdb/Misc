@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-	tests := [][]int{{1,0,2,3,0,4,5,0}, {1,2,3}}
+	tests := [][]int{{1, 0, 2, 3}, {1, 0, 2, 3, 0, 4, 5, 0}, {1, 2, 3}}
 
 	for testNo, test := range tests {
 		log.Printf("#%d duplicateZeros(%v) == ", testNo, test)
@@ -33,18 +33,21 @@ func main() {
 	}
 }
 
-
-func duplicateZeros(x []int)  {
+func duplicateZeros(x []int) {
 	for i := 0; i < len(x); i++ {
 		if x[i] == 0 {
-			for j := len(x)-2; j > i; j-- {
-				x[j]= x[j+1]
+			// found a zero
+
+			// shift everything up one position
+			for j := len(x) - 2; j > i; j-- {
+				x[j+1] = x[j]
 			}
 
+			// set next element to zero, and perform extra increment
 			if i+1 < len(x) {
 				x[i+1] = 0
 				i++
 			}
 		}
-	} 
+	}
 }
