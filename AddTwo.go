@@ -134,6 +134,11 @@ func NumToList(n int) *ListNode {
 		ndigits = append(ndigits, rem)
 	}
 
+	// result has to be stored in reverse order in list
+	for i := 0; i < len(ndigits)/2; i++ {
+		ndigits[i], ndigits[len(ndigits)-i-1] = ndigits[len(ndigits)-i-1], ndigits[i]
+	}
+
 	if len(ndigits) > 0 {
 		list := NewListNode(ndigits[len(ndigits)-1], nil)
 		head := list
