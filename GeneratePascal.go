@@ -1,4 +1,3 @@
-
 /*
 Given a non-negative integer numRows, generate the first numRows of Pascal's triangle.
 
@@ -25,7 +24,7 @@ import (
 )
 
 func main() {
-	tests := []int{2}
+	tests := []int{1, 2, 3, 4, 5}
 
 	for _, test := range tests {
 		log.Printf("generate(%d) == %v\n", test, generate(test))
@@ -34,32 +33,37 @@ func main() {
 
 func generate(numRows int) [][]int {
 	result := [][]int{}
-	
+
 	for i := 0; i < numRows; i++ {
+		// log.Printf("-----------------------------\ni == %d\n", i)
 		// get the prev row
 		var prevRow []int
 		if i == 0 {
+			// log.Println("Setting first row..")
 			thisRow := []int{1}
 			result = append(result, thisRow)
+			// log.Printf("result == %v\n", result)
 		} else {
+			// log.Println("Setting non-first row")
 			prevRow = result[len(result)-1]
-			// thisRow := []int{0,0,0,0}
 			thisRow := []int{}
 
-			// for i := 0; i < len(prevRow); i++ {
-			// for j := 0; j < len(thisRow); j++ {
-			for j := 0; j < (i+1); j++ {
+			for j := 0; j < (i + 1); j++ {
+				// log.Printf("\t--------------\nj == %d\n", j)
 				if j == 0 {
-					// thisRow[j] = prevRow[j]
+					// log.Println("\tSetting thisrow first element..")
 					thisRow = append(thisRow, prevRow[j])
+					// log.Printf("\tthisRow == %v\n", thisRow)
 
-				} else if j == len(thisRow)-1 {
-					// thisRow[j] = prevRow[len(prevRow)-1]
+				} else if j == i {
+					// log.Println("\tSetting thisrow last element..")
 					thisRow = append(thisRow, prevRow[len(prevRow)-1])
+					// log.Printf("\tthisRow == %v\n", thisRow)
 
 				} else {
-					// thisRow[j] = prevRow[j] + prevRow[j-1]
+					// log.Println("\tSetting one of thisrow middle elements..")
 					thisRow = append(thisRow, (prevRow[j] + prevRow[j-1]))
+					// log.Printf("\tthisRow == %v\n", thisRow)
 				}
 			}
 
