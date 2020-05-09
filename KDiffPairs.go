@@ -23,6 +23,8 @@ The length of the array won't exceed 10,000.
 All the integers in the given input belong to the range: [-1e7, 1e7].
 */
 
+// NOTE: THIS IS O(N^2) - OPTIMIZE
+
 package main
 
 import (
@@ -30,7 +32,7 @@ import (
 )
 
 func main() {
-	tests := [][][]int{{{3, 1, 4, 1, 5},{2}}, {{1, 2, 3, 4, 5},{1}}, {{1, 3, 1, 5, 4},{0}}}
+	tests := [][][]int{{{3, 1, 4, 1, 5}, {2}}, {{1, 2, 3, 4, 5}, {1}}, {{1, 3, 1, 5, 4}, {0}}}
 
 	for _, test := range tests {
 		log.Printf("findPairs(%v, %d) == %d\n", test[0], test[1][0], findPairs(test[0], test[1][0]))
@@ -39,17 +41,36 @@ func main() {
 
 func findPairs(nums []int, k int) int {
 	pairCount := 0
-    for i := 0; i < len(nums); i++ {
+	pairsFound := [][]int{}
+
+	for i := 0; i < len(nums); i++ {
 		curElm := nums[i]
 
-		for j := i+1; j < len(nums); j++ {
+		for j := i + 1; j < len(nums); j++ {
 			if abs(curElm-nums[j]) == k {
-				pairCount++
+				thisPair := []int{curElm, nums[j]}
+				// log.Println(thisPair)
+				if !pairSeen(thisPair, pairsFound) {
+					pairsFound = append(pairsFound, thisPair)
+					pairCount++
+				}
+
 			}
 		}
 	}
 
 	return pairCount
+}
+
+func pairSeen(pair []int, pairsFound [][]int) bool {
+	// log.Printf("\tlen(pairsFound) == %d\n", len(pairsFound))
+	for _, thisPairFound := range pairsFound {
+		if (pair[0] == thisPairFound[0] && pair[1] == thisPairFound[1]) || (pair[0] == thisPairFound[1] && pair[1] == thisPairFound[0]) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func abs(x int) int {
