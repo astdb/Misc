@@ -25,7 +25,7 @@ import (
 )
 
 func main() {
-	tests := []int{4}
+	tests := []int{0, 1, 2, 3, 4, 19, 20, 25, 1000000, 1000000000, 1000000000000}
 
 	for _, test := range tests {
 		log.Printf("constructRectangle(%d) == %v\n", test, constructRectangle(test))
@@ -33,20 +33,57 @@ func main() {
 }
 
 func constructRectangle(area int) []int {
-	areaF := float64(area)
-	sqrt := math.Sqrt(areaF)
-	sqrtCeil := int(math.Ceil(sqrt))
-	sqrtFlr := int(math.Floor(sqrt))
+	var curDiff int // diff of above
 
 	var leng int
 	var wid int
-	if sqrtCeil > sqrtFlr {
-		leng = sqrtCeil
-		wid = sqrtFlr
-	} else {
-		leng = sqrtFlr
-		wid = sqrtCeil
+
+	// iterate through factor pairs for area, and find the couple with least difference
+	if area == 1 {
+		return []int{1,1}
+	}
+
+	for i := 1; i <= area/2; i++ {
+		if area%i == 0 {
+			fac1 := i
+			fac2 := area / i
+
+			if i == 1 {
+				// initialize
+				curDiff = absDiff(fac1, fac2)
+
+				if fac1 > fac2 {
+					leng = fac1
+					wid = fac2
+				} else {
+					leng = fac2
+					wid = fac1
+				}
+			} else if curDiff > absDiff(fac1, fac2) {
+				curDiff = absDiff(fac1, fac2)
+
+				if fac1 > fac2 {
+					leng = fac1
+					wid = fac2
+				} else {
+					leng = fac2
+					wid = fac1
+				}
+
+			}
+		}
 	}
 
 	return []int{leng, wid}
+}
+
+// return the absolute value of the difference between x and y
+func absDiff(x, y int) int {
+	res := x - y
+
+	if res < 0 {
+		return (res * (-1))
+	}
+
+	return res
 }
