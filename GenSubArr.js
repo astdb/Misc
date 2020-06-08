@@ -1,12 +1,19 @@
 'use strict';
 
-let tests = [[], [0], [1,2], [1,2,3,4], [2,2,2,2]];
+let tests = [[], [0], [1,2], [1,2,3,4], [2,2,2,2]];   // basic tests
+
+// generate large subarray test case
+let largeTestCase = [];
+for(let i = 1; i <= 1000; i++) {
+  largeTestCase.push(i)
+}
+tests.push(largeTestCase);
 
 for(let i = 0; i < tests.length; i++) {
-  console.log("subArr(" + tests[i] + ") == " + printSubArr(subArr(tests[i])));
+  console.log("Test #" + (i+1) + ": subArr(" + tests[i] + ") == " + printSubArr(subArr(tests[i])));
 }
 
-// subArr() generates all sub arrays of arr
+// subArr() generates all sub-arrays of arr
 // start with an outer loop of subarray lengths (starting 1). In the inner loop, set a sub array start index and increment
 // by 1 until end of subarray is at the end of arr. 
 function subArr(arr) {
