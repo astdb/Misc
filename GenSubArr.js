@@ -3,14 +3,42 @@
 let tests = [[], [0], [1,2], [1,2,3,4], [2,2,2,2]];   // basic tests
 
 // generate large subarray test case
-let largeTestCase = [];
-for(let i = 1; i <= 1000; i++) {
-  largeTestCase.push(i)
-}
-tests.push(largeTestCase);
+// let largeTestCase = [];
+// for(let i = 1; i <= 1000; i++) {
+//   largeTestCase.push(i)
+// }
+// tests.push(largeTestCase);
 
 for(let i = 0; i < tests.length; i++) {
-  console.log("Test #" + (i+1) + ": subArr(" + tests[i] + ") == " + printSubArr(subArr(tests[i])));
+  // console.log("Test #" + (i+1) + ": subArr(" + tests[i] + ") == " + printSubArr(subArr(tests[i])));
+  // console.log("Test #" + (i+1) + ": subArr(" + tests[i] + ") == " + subArr(tests[i]));
+
+  let res = [];
+  subArr2(tests[i], 0, 0, res);
+  console.log("Test #" + (i+1) + ": subArr(" + tests[i] + ") == " + printSubArr(res));
+}
+
+
+// recursive version of subarray generation function
+function subArr2(arr, start, end, res) {
+  if(end >= arr.length) {
+    return
+
+  } else if(start > end) {
+    subArr2(arr, 0, (end+1), res);
+
+  } else {
+    let thisSubArr = [];
+
+    for(let i = start; i < end; i++) {
+      thisSubArr.push(arr[i]);
+    }
+
+    thisSubArr.push(arr[end]);
+    res.push(thisSubArr);
+
+    subArr2(arr, (start+1), end, res)
+  }
 }
 
 // subArr() generates all sub-arrays of arr
