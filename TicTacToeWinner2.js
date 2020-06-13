@@ -111,5 +111,62 @@ var tictactoe = function(moves) {
 };
 
 var won = function(board, moves, xMoves) {
+  // if(board[0][0] == board[0][1] == board[0][2]) {
+  //   // row 1
 
+  // } else if(board[1][0] == board[1][1] == board[1][2]) {
+  //   // row 2
+
+  // } else if(board[2][0] == board[2][1] == board[2][2]) {
+  //   // row 3
+    
+  // } else if(board[0][0] == board[1][0] == board[2][0]) {
+  //   // col 1
+
+  // } else if(board[0][1] == board[2][1] == board[2][2]) {
+
+  // } 
+
+  let boardSize = 3;
+
+  let colStart = '';
+  let colSame = false;
+
+  let diag1Start = '';
+  let diag1Same = true;
+
+  for(let col = 0; col < boardSize; col++) {
+
+    let rowStart = '';  // starting character of this row
+    let rowSame = true; // flag indicating if row contains same char (X or O)
+
+    for(let row = 0; row < boardSize; row++) {
+      if(col === 0 && row === 0) {
+        colStart = board[col][row];
+        diag1Start = board[col][row];
+        
+      } else if(row === 0) {
+        if(colStart !== board[col][row]) {
+          colSame = fale;
+        }
+      }
+
+
+      if(row == 0) {
+        rowStart = board[col][row];
+      } else {
+        if(rowStart !== board[col][row]) {
+          rowSame = false;
+        }
+      }
+    }
+
+    if(rowSame === true) {
+      return true;
+    }
+  }
+  
+  if(colSame === true) {
+    return true;
+  }
 }
