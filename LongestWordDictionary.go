@@ -36,6 +36,10 @@ func main() {
 	}
 }
 
+// build a map with words as keys - for fast checking if a word exists in dictionary
+// for each word, check if it can be built char-by-char - use word map to check if word's substrings exist in dictionary.
+// return the longest eligible word
+
 func longestWord(words []string) string {
 	// build word index
 	wordMap := map[string]int{}
