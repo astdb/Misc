@@ -13,6 +13,12 @@ func main() {
 }
 
 // Complete the minimumDistances function below.
+
+// Design: Keep a map of array values to their indices. Iterate through the array per element.
+// For each value, check if the value is seen in the map - if not, insert it with its current index.
+// If a value is seen in the map, deduct its recorded index from current element's index to calculate
+// distance - if smaller than recorded minimum distance, update minimum distance varable, and remove value from map.
+// Upon completing array iteration, return minimum distance value. 
 func minimumDistances(a []int32) int32 {
 	// map of similar values and their indexes
 	vals := map[int32]int{}
