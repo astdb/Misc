@@ -14,6 +14,26 @@ func main() {
 
 // left-rotate n, x times
 func LeftRotate(n []int32, x int32) []int32 {
+  if len(n) <= 1 {
+    return n
+  }
+
+  var j int32
+  for j = 0; j < x; j++ {
+    tmp := n[0]
+
+    for i := 1; i < len(n); i++ {
+      n[i-1] = n[i] 
+    }
+
+    n[len(n)-1] = tmp
+  }
+
+  return n
+}
+
+// right-rotate n, x times
+func RightRotate(n []int32, x int32) []int32 {
 	if len(n) <= 1 {
 		return n
 	}
