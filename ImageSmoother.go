@@ -39,7 +39,10 @@ func imageSmoother(M [][]int) [][]int {
 	// for each cell
 	for i := 0; i < len(M); i++ {
 		thisRow := []int{}
+		log.Printf("row: %d\n", i)
 		for j := 0; j < len(M[i]); j++ {
+			log.Printf("\tcell: %d\n", j)
+
 			surroundingCellCount := 0
 			surroundingCellTotal := 0
 
@@ -49,48 +52,63 @@ func imageSmoother(M [][]int) [][]int {
 
 			// top left
 			if ((i - 1) >= 0) && ((j - 1) >= 0) {
+				log.Printf("\t\tTop Left\n")
 				surroundingCellCount++
 				surroundingCellTotal += M[i-1][j-1]
 			}
 
 			// top middle
 			if ((i - 1) >= 0) && (len(M[i-1]) > j) {
+				log.Printf("\t\tTop middle\n")
+
 				surroundingCellCount++
 				surroundingCellTotal += M[i-1][j]
 			}
 
 			// top right
 			if ((i - 1) >= 0) && (len(M[i-1]) > (j + 1)) {
+
+				log.Printf("\t\tTop right\n")
 				surroundingCellCount++
 				surroundingCellTotal += M[i-1][j+1]
 			}
 
 			// left
 			if (j - 1) >= 0 {
+
+				log.Printf("\t\tLeft\n")
 				surroundingCellCount++
 				surroundingCellTotal += M[i][j-1]
 			}
 
 			// right
 			if (j + 1) < len(M[i]) {
+
+				log.Printf("\t\tRight\n")
 				surroundingCellCount++
 				surroundingCellTotal += M[i][j+1]
 			}
 
 			// bottom left
-			if (i+1) > len(M) && (j-1) >= 0 {
+			if (i+1) < len(M) && (j-1) >= 0 {
+
+				log.Printf("\t\tBottom left\n")
 				surroundingCellCount++
 				surroundingCellTotal += M[i+1][j-1]
 			}
 
 			// bottom middle
 			if (i+1) < len(M) && j < len(M[i+1]) {
+
+				log.Printf("\t\tBottom mid\n")
 				surroundingCellCount++
 				surroundingCellTotal += M[i+1][j]
 			}
 
 			// bottom right
 			if (i+1) < len(M) && (j+1) < len(M[i+1]) {
+
+				log.Printf("\t\tBottom right\n")
 				surroundingCellCount++
 				surroundingCellTotal += M[i+1][j+1]
 			}
