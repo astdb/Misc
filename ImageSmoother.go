@@ -22,13 +22,85 @@ The length and width of the given matrix are in the range of [1, 150].
 package main
 
 import (
-  "log"
+	"log"
 )
 
 func main() {
+	tests := [][][]int{{{1, 1, 1}, {1, 0, 1}, {1, 1, 1}}}
 
+	for _, test := range tests {
+		log.Printf("imageSmoother(%v) == %v\n", test, imageSmoother(test))
+	}
 }
 
 func imageSmoother(M [][]int) [][]int {
-    
+	result := [][]int{}
+
+	// for each cell
+	for i := 0; i < len(M); i++ {
+		thisRow := []int{}
+		for j := 0; j < len(M[i]); j++ {
+			surroundingCellCount := 0
+			surroundingCellTotal := 0
+
+			// self
+			surroundingCellCount++
+			surroundingCellTotal += M[i][j]
+
+			// top left
+			if ((i - 1) >= 0) && ((j - 1) >= 0) {
+				surroundingCellCount++
+				surroundingCellTotal += M[i-1][j-1]
+			}
+
+			// top middle
+			if ((i - 1) >= 0) && (len(M[i-1]) > j) {
+				surroundingCellCount++
+				surroundingCellTotal += M[i-1][j]
+			}
+
+			// top right
+			if ((i - 1) >= 0) && (len(M[i-1]) > (j + 1)) {
+				surroundingCellCount++
+				surroundingCellTotal += M[i-1][j+1]
+			}
+
+			// left
+			if (j - 1) >= 0 {
+				surroundingCellCount++
+				surroundingCellTotal += M[i][j-1]
+			}
+
+			// right
+			if (j + 1) < len(M[i]) {
+				surroundingCellCount++
+				surroundingCellTotal += M[i][j+1]
+			}
+
+			// bottom left
+			if (i+1) > len(M) && (j-1) >= 0 {
+				surroundingCellCount++
+				surroundingCellTotal += M[i+1][j-1]
+			}
+
+			// bottom middle
+			if (i+1) < len(M) && j < len(M[i+1]) {
+				surroundingCellCount++
+				surroundingCellTotal += M[i+1][j]
+			}
+
+			// bottom right
+			if (i+1) < len(M) && (j+1) < len(M[i+1]) {
+				surroundingCellCount++
+				surroundingCellTotal += M[i+1][j+1]
+			}
+
+			thisRow = append(thisRow, (surroundingCellTotal / surroundingCellCount))
+		}
+
+		result = append(result, thisRow)
+	}
+
+	// return surroundingCellTotal/surroundingCellCount
+	return result
 }
