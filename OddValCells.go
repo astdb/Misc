@@ -30,6 +30,17 @@ Constraints:
 0 <= indices[i][1] < m
 */
 
+package main
+
+import (
+  "log"
+)
+
+func main() {
+  log.Printf("oddCells(%d, %d, %v) == %d\n", 2, 3, [][]int{{0,1},{1,1}}, oddCells(2, 3, [][]int{{0,1},{1,1}}))
+  log.Printf("oddCells(%d, %d, %v) == %d\n", 2, 2, [][]int{{1,1},{0,0}}, oddCells(2, 2, [][]int{{1,1},{0,0}}))
+}
+
 func oddCells(n int, m int, indices [][]int) int {
   // initialize matrix
   mat := [][]int{}
@@ -42,5 +53,23 @@ func oddCells(n int, m int, indices [][]int) int {
     mat = append(mat, row)
   }
 
-   
+  for _, index := range indices {
+    if len(index) >= 2 && index[0] < n && index[1] < m {
+      mat[index[0]][index[1]]++
+    }
+  }
+
+  log.Printf("\toddCells(): %v\n", mat)
+
+  res := 0
+  for i := 0; i < n; i++ {
+    for j := 0; j < m; j++ {
+      if mat[i][j] % 2 == 1 {
+        // odd element
+        res++
+      }
+    }
+  }
+
+  return res
 }
