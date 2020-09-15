@@ -30,16 +30,84 @@ package main
 
 import (
   "log"
+  "strings"
+  "strconv"
 )
 
 func main() {
-  
+  tests := [][]string{{"dig1 8 1 5 1","let1 art can","dig2 3 6","let2 own kit dig","let3 art zero"}}
+
+  for _, test := range tests {
+    log.Printf("reorderLogFiles(%v) == %v\n", test, reorderLogFiles(test))
+  }
 }
 
 func reorderLogFiles(logs []string) []string {
-    // each log is a string of tokens
+    // each log is a string of tokens.
     // first token is an alphanumeric ID.
     // content after token is either all alphabetic (letter-log) or all numeric (digit-log).
-    // order letter logs first, lexicographically ignoring ID (use ID only for tiiebreaks). 
+    // order letter logs first, lexicographically ignoring ID (use ID only for tiebreaks). 
     // digit logs must come after all letter logs, in original order.
+    digitLogs := []string{}
+    letterLogs := []string{}
+
+    for _, thisLog := range logs {
+      if isDigitLog(thisLog) {
+        digitLogs = append(digitLogs, thisLog)
+      } else if isLetterLog(thisLog) {
+        letterLogs = append(letterLogs, thisLog)
+      }
+    }
+
+    log.Printf("reorderLogFiles(): letterLogs: %v\n", letterLogs)
+    log.Printf("reorderLogFiles(): digitLogs: %v\n", digitLogs)
+
+    return append(letterLogs, digitLogs...)
+}
+
+// indicates if a given log is letter
+func isLetterLog(logstr string) bool {
+  logstr = strings.TrimSpace(logstr)  // strip any extra whitespace
+  if len(logstr) <= 0 {
+    return false
+  }
+
+  logstrTokens := strings.Split(logstr, " ")  // get tokens
+  if len(logstrTokens) <= 1 {
+    // each log must have starting ID and at least one token
+    return false
+  }
+
+  // check if first token after ID can be turned into a number:
+  //  - if yes, it must be a digit log (only numbers after ID)
+  //  - else, it must be a letter logm (only lowercase letters after ID)
+  _, err := strconv.Atoi(logstrTokens[1])
+  if err != nil {
+    return true
+  }
+
+  return false
+}
+
+func isDigitLog(logstr string) bool {
+  logstr = strings.TrimSpace(logstr)  // strip any extra whitespace
+  if len(logstr) <= 0 {
+    return false
+  }
+
+  logstrTokens := strings.Split(logstr, " ")  // get tokens
+  if len(logstrTokens) <= 1 {
+    // each log must have starting ID and at least one token
+    return false
+  }
+
+  // check if first token after ID can be turned into a number:
+  //  - if yes, it must be a digit log (only numbers after ID)
+  //  - else, it must be a letter log (only lowercase letters after ID)
+  _, err := strconv.Atoi(logstrTokens[1])
+  if err != nil {
+    return false
+  }
+
+  return true
 }
