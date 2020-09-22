@@ -42,7 +42,7 @@ import (
 )
 
 func main() {
-	tests := [][]int{{1, 1, 2}, {0, 0, 1, 1, 1, 2, 2, 3, 3, 4}}
+	tests := [][]int{{}, {1}, {1, 1}, {1, 1, 2}, {0, 0, 1, 1, 1, 2, 2, 3, 3, 4}}
 
 	for _, test := range tests {
 		log.Printf("removeDuplicates(%v) == %d\n", test, removeDuplicates(test))
@@ -50,24 +50,21 @@ func main() {
 }
 
 func removeDuplicates(nums []int) int {
-	res := len(nums)
 	arrayEnd := len(nums)
 
 	for i := 0; i < len(nums); i++ {
-		// check if current element is same as prev
-		if ((i - 1) >= 0) && (nums[i] == nums[i-1]) {
+		if ((i + 1) < arrayEnd) && (nums[i] == nums[i+1]) {
 			// move everything above current element one down
 			k := i
-			for k < (arrayEnd - 2) {
+			for k < (arrayEnd - 1) {
 				nums[k] = nums[k+1]
 				k++
 			}
 
 			arrayEnd--
-			res--
 			i--
 		}
 	}
 
-	return res
+	return arrayEnd
 }
