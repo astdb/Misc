@@ -32,13 +32,14 @@ package main
 
 import (
 	"log"
+	"strings"
 )
 
 func main() {
 	tests := [][][]string{ {{"Bob hit a ball, the hit BALL flew far after it was hit."}, {"hit"}} }
 
 	for _, test := range tests {
-		log.Printf("mostCommonWord(%s, %v) == %s\n")
+		log.Printf("mostCommonWord(%s, %v) == %s\n", test[0][0], test[1], mostCommonWord(test[0][0], test[1]))
 	}
 }
 
@@ -47,11 +48,49 @@ func mostCommonWord(paragraph string, banned []string) string {
 		bannedWordMap := map[string]int{}
 
 		for _, word := range banned {
+			word = strings.ToLower(strings.TrimSpace(word))
 			_, ok := bannedWordMap[word]
 			if ok {
 				bannedWordMap[word]++
 			} else {
-				bannedWordMap[word]
+				bannedWordMap[word] = 1
 			}
 		}
+
+		// split paragraph into words
+		paragraphWords := strings.Split(paragraph, " ")
+
+		wordCounts := map[string]int{}
+		for _, word := range paragraphWords {
+			word = strings.ToLower(strings.TrimSpace(word))
+			_, banned := bannedWordMap[strings.TrimSpace(word)]
+			if !banned {
+				_, counted := wordCounts[word]
+				if !counted {
+					wordCounts[word] = 1
+				} else {
+					wordCounts[word]++
+				}
+			}
+		}
+
+		var mostCommonWordd string
+		var mostCommonCount int
+		
+		// for each word/count pair in wordCounts
+		i := 0
+		for w, c := range wordCounts {
+			if i == 0 {
+				mostCommonWordd = w
+				mostCommonCount = c
+				i++
+			} else {
+				if c > mostCommonCount {
+					mostCommonWordd = w
+					mostCommonCount = c
+				}
+			}
+		}
+
+		return mostCommonWordd
 }
