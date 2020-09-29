@@ -33,10 +33,12 @@ package main
 import (
 	"log"
 	"strings"
+	"unicode"
 )
 
 func main() {
-	tests := [][][]string{ {{"Bob hit a ball, the hit BALL flew far after it was hit."}, {"hit"}} }
+	// tests := [][][]string{ {{"Bob hit a ball, the hit BALL flew far after it was hit."}, {"hit"}}, {{"Bob"}, {}} }
+	tests := [][][]string{ {{"Bob"}, {}} }
 
 	for _, test := range tests {
 		log.Printf("mostCommonWord(%s, %v) == %s\n", test[0][0], test[1], mostCommonWord(test[0][0], test[1]))
@@ -77,7 +79,7 @@ func mostCommonWord(paragraph string, banned []string) string {
 			// if current character is an interword char, turn chars seen so far into word (string) andd add to 
 			// paragraph word collection. 
 			if interWordChar(ch) {
-				curWordStr = strings.ToLower(strings.TrimSpace(string(curWord)))
+				curWordStr := strings.ToLower(strings.TrimSpace(string(curWord)))
 				
 				if curWordStr != "" {
 					paragraphWords = append(paragraphWords, curWordStr)
@@ -91,6 +93,13 @@ func mostCommonWord(paragraph string, banned []string) string {
 			}
 		}
 
+		curWordStr := strings.ToLower(strings.TrimSpace(string(curWord)))				
+		if curWordStr != "" {
+			paragraphWords = append(paragraphWords, curWordStr)
+		}
+
+		log.Printf("paragraphWords: %v\n", paragraphWords)
+
 		wordCounts := map[string]int{}
 		for _, word := range paragraphWords {
 			word = strings.ToLower(strings.TrimSpace(word))
@@ -102,10 +111,12 @@ func mostCommonWord(paragraph string, banned []string) string {
 				} else {
 					wordCounts[word]++
 				}
+			} else {
+				log.Printf("%s is banned.\n", word)
 			}
 		}
 
-		log.Printf("mostCommonWord(): %v\n", wordCounts)
+		// log.Printf("mostCommonWord(): %v\n", wordCounts)
 
 		var mostCommWord string
 		var mostCommCount int
