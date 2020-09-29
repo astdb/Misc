@@ -43,8 +43,17 @@ func main() {
 	}
 }
 
+
+func interWordChar(ch rune) bool {
+	if unicode.IsLetter(ch) || unicode.IsNumber(ch) || unicode.IsDigit(ch) {
+		return false
+	}
+
+	return true
+}
+
 func mostCommonWord(paragraph string, banned []string) string {
-		// put banned words in a map for O(1) locating
+		// store banned words in a map for fast lookup
 		bannedWordMap := map[string]int{}
 
 		for _, word := range banned {
@@ -58,7 +67,29 @@ func mostCommonWord(paragraph string, banned []string) string {
 		}
 
 		// split paragraph into words
-		paragraphWords := strings.Split(paragraph, " ")
+		// paragraphWords := strings.Split(paragraph, " ")
+		paragraphWords := []string{}
+
+		// iterate through the paragraph and form words, using punctuation/space as delimiting tokens
+		curWord := []rune{}
+		for _, ch := range paragraph {
+
+			// if current character is an interword char, turn chars seen so far into word (string) andd add to 
+			// paragraph word collection. 
+			if interWordChar(ch) {
+				curWordStr = strings.ToLower(strings.TrimSpace(string(curWord)))
+				
+				if curWordStr != "" {
+					paragraphWords = append(paragraphWords, curWordStr)
+				}
+
+				curWord = []rune{}
+				
+			} else {
+				// keep adding chars to current word until an intrword char is seen
+				curWord = append(curWord, ch)
+			}
+		}
 
 		wordCounts := map[string]int{}
 		for _, word := range paragraphWords {
@@ -74,23 +105,25 @@ func mostCommonWord(paragraph string, banned []string) string {
 			}
 		}
 
-		var mostCommonWordd string
-		var mostCommonCount int
+		log.Printf("mostCommonWord(): %v\n", wordCounts)
+
+		var mostCommWord string
+		var mostCommCount int
 		
 		// for each word/count pair in wordCounts
 		i := 0
 		for w, c := range wordCounts {
 			if i == 0 {
-				mostCommonWordd = w
-				mostCommonCount = c
+				mostCommWord = w
+				mostCommCount = c
 				i++
 			} else {
-				if c > mostCommonCount {
-					mostCommonWordd = w
-					mostCommonCount = c
+				if c > mostCommCount {
+					mostCommWord = w
+					mostCommCount = c
 				}
 			}
 		}
 
-		return mostCommonWordd
+		return mostCommWord
 }
