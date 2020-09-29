@@ -35,10 +35,38 @@ import (
 )
 
 func main() {
-	tests := [][]int{{1,7,3,6,5,6}, {1,2,3}}
+	tests := [][]int{{1,7,3,6,5,6}, {1,2,3}, {-1,-1,-1,0,1,1}}
 	for _, test := range tests {
-		log.Printf("pivotIndex(%v) == %d\n", test, pivotIndex(test))
+		log.Printf("pivotIndex(%v) == %d\n", test, pivotIndex2(test))
 	}
+}
+
+func pivotIndex2(nums []int) int {
+	// if the total of all elements in th array is X, and the total of all elements upto an index i is y,
+	// then the total of elemnts to the right of i is X-arr[i]-y
+
+
+	// calculate the total of all elements in the collection
+	fullTotal := 0
+	for _, n := range nums {
+		fullTotal += n
+	}
+
+	// keep running total of all elements to the left of nums[i]
+	leftTotal := 0
+	for i := 0; i < len(nums); i++ {
+		rightTotal := fullTotal - nums[i] - leftTotal
+
+		if rightTotal == leftTotal {
+			return i
+		} else {
+			// update left total
+			leftTotal += nums[i]
+		}
+	}
+
+	// no idex with same element total to the left and to the right found in nums
+	return -1
 }
 
 func pivotIndex(nums []int) int {
