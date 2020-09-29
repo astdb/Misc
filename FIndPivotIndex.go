@@ -35,9 +35,64 @@ import (
 )
 
 func main() {
-
+	tests := [][]int{{1,7,3,6,5,6}, {1,2,3}}
+	for _, test := range tests {
+		log.Printf("pivotIndex(%v) == %d\n", test, pivotIndex(test))
+	}
 }
 
 func pivotIndex(nums []int) int {
-    
+		// totals from left
+		totalsLeft := []int{}
+
+		total := 0
+		for i := 0; i < len(nums); i++ {
+			total += nums[i]
+			totalsLeft = append(totalsLeft, total)
+		}
+
+		log.Printf("pivotIndex(): totalsLeft: %v\n", totalsLeft)
+
+		// totals from right
+		totalsRight := []int{}
+
+		total = 0
+		for i := len(nums)-1; i >= 0; i-- {
+			total += nums[i]
+			totalsRight = append(totalsRight, total)
+		}
+
+		log.Printf("pivotIndex(): totalsRight: %v\n", totalsRight)
+
+		for i := 0; i < len(totalsLeft); i++ {
+			leftTot := 0
+			if i-1 >= 0 {
+				leftTot = totalsLeft[i-1]
+
+				rightTot := 0
+				
+				if (len(totalsRight)-(i+2)) >= 0 {
+					rightTot = totalsRight[len(totalsRight)-(i+2)]
+
+					if leftTot == rightTot {
+						return i
+					}		
+				}	
+			}
+
+			// rightTot := 0
+			// if i+1 < len(totalsRight) {
+			// 	rightTot = totalsRight[i+1]
+			// }
+
+			// if (len(totalsRight)-(i+2)) >= 0 {
+			// 	rightTot = totalsRight[len(totalsRight)-(i+2)]
+			// }
+
+			// if leftTot == rightTot {
+			// 	return i
+			// }
+		}
+
+		return -1
 }
