@@ -23,11 +23,41 @@ import (
 func main() {
   tests := []string{"hello", "leetcode"}
   for _, test := range tests {
-    log.Printf("reverseVowels(%s) = %s\n", test, test)
+    log.Printf("reverseVowels(%s) = %s\n", test, reverseVowels(test))
   }
 }
 
 func reverseVowels(s string) string {
-   
+  // transform input string into unicode char list for easier manipulation
+  sRunes := []rune(s)
+
+  // make lists of vowels and their indices from start
+  vowelsList  := []rune{}
+  vowelIndexList := []int{}
+
+  for i := 0; i < len(sRunes); i++ {
+    if isVowel(sRunes[i]) {
+      vowelsList = append(vowelsList, sRunes[i])
+      vowelIndexList = append(vowelIndexList, i)
+    }
+  }
+
+  // log.Printf("%v\n", vowelsList)
+  // log.Printf("%v\n", vowelIndexList)
+
+  j := 0
+  for i := len(vowelIndexList)-1; i >= 0; i-- {
+    sRunes[vowelIndexList[i]] = vowelsList[j]
+    j++
+  }
+
+  return string(sRunes)
 }
 
+func isVowel(ch rune) bool {
+  if ch == 'a' || ch == 'e' || ch == 'i' || ch == 'o' || ch == 'u' || ch == 'A' || ch == 'E' || ch == 'I' || ch == 'O' || ch == 'U' {
+    return true
+  }
+
+  return false
+}
