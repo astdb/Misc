@@ -46,15 +46,54 @@ import (
 func main() {
 	// log.Println(int(math.Pow10(0)))
 
-	tests := [][]int{ {1,2,3}, {2,1}, {0} }
+	// tests := [][]int{ {1,2,3}, {2,1}, {0} }
+	// for _, test := range tests {
+	// 	log.Printf("arrayToInt(%v) = %d\n", test, arrayToInt(test))
+	// }
+
+	// tests := []int{321, 0}
+	// for _, test := range tests {
+	// 	log.Printf("intToArray(%v) = %d\n", test, intToArray(test))
+	// }
+
+	tests := [][][]int{ {{1,2,0,0},{34}}, {{2,7,4}, {181}}, {{2,1,5}, {806}}, {{9,9,9,9,9,9,9,9,9,9},{1}}, {{0},{0}} }
+
 	for _, test := range tests {
-		log.Printf("arrayToInt(%v) = %d\n", test, arrayToInt(test))
+		log.Printf("addToArrayForm(%v, %d) = %v\n", test[0], test[1][0], addToArrayForm(test[0], test[1][0]))
 	}
 }
 
 func addToArrayForm(A []int, K int) []int {
 	
-	return A
+	// return A
+	return intToArray(arrayToInt(A) + K)
+}
+
+func reverse(x []int) []int {
+	for i := 0; i < len(x)/2; i++ {
+		x[i], x[len(x)-i-1] = x[len(x)-i-1], x[i]
+	}
+
+	return x
+}
+
+func intToArray(x int) []int {
+	res := []int{}
+
+	var rem int
+
+	if x == 0 {
+		return []int{0}
+	}
+	
+	for x  > 0 {
+		 rem = x % 10
+		 x = x / 10
+
+		res = append(res, rem)
+	 }
+
+	 return reverse(res)
 }
 
 // turn an integer given as an array of its decimal digits to int form
