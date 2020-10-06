@@ -59,9 +59,61 @@ func main() {
 	tests := [][][]int{ {{1,2,0,0},{34}}, {{2,7,4}, {181}}, {{2,1,5}, {806}}, {{9,9,9,9,9,9,9,9,9,9},{1}}, {{0},{0}} }
 
 	for _, test := range tests {
-		log.Printf("addToArrayForm(%v, %d) = %v\n", test[0], test[1][0], addToArrayForm(test[0], test[1][0]))
+		// log.Printf("addToArrayForm(%v, %d) = %v\n", test[0], test[1][0], addToArrayForm(test[0], test[1][0]))
+		log.Printf("addToArrayForm(%v, %d) = %v\n", test[0], test[1][0], addToArrayForm2(test[0], test[1][0]))
 	}
 }
+
+func addToArrayForm2(A []int, K int) []int {
+	i := 1
+
+	x := true
+	y := true
+
+	K_arr := intToArray(K)
+
+	var res int
+	var rem int
+	resArr := []int{}
+
+	for x || y {
+		x1 := 0
+		x2 := 0
+
+		if (len(A)-i) >= 0 {
+			x1 = A[len(A)-i]
+		} else {
+			x = false
+		}
+
+		if (len(K_arr)-i) >= 0 {
+			x2 = K_arr[len(K_arr)-i]
+		} else {
+			y = false
+		}
+
+		i++
+
+		res = x1 + x2 + rem		
+		if res >= 10 {
+			rem = res % 10
+			res = res / 10
+
+		} else {
+			rem = 0
+		}
+
+		resArr = append(resArr, res)
+	}
+
+	if rem > 0 {
+		resArr = append(resArr, rem)
+	}
+
+	return reverse(resArr)
+}
+
+
 
 func addToArrayForm(A []int, K int) []int {
 	
