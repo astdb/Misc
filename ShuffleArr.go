@@ -36,6 +36,7 @@ import (
 
 func main() {
 	tests := [][][]int{{{2, 5, 1, 3, 4, 7}, {3}}, {{1, 2, 3, 4, 4, 3, 2, 1}, {4}}, {{1, 1, 2, 2}, {2}}}
+	// tests := [][][]int{ {{1, 1, 2, 2}, {2}} }
 
 	for _, test := range tests {
 		log.Printf("shuffle(%v, %d) = %v\n", test[0], test[1][0], shuffle(test[0], test[1][0]))
@@ -48,8 +49,11 @@ func shuffle(nums []int, n int) []int {
 	first := true
 	nCount := 0
 
+	log.Printf("nCount < n && i < len(nums)/2 && j < len(nums)\n")
 	res := []int{}
-	for nCount < n && i < len(nums)/2 && j < len(nums) {
+	for nCount < n && i <= len(nums)/2 && j < len(nums) {
+		log.Printf("\tnCount = %d, n = %d, i = %d, len(nums)/2 = %d, j = %d, len(nums) = %d\n", nCount, n, i, len(nums)/2, j, len(nums))
+
 		if first {
 			res = append(res, nums[i])
 
