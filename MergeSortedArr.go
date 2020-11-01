@@ -35,5 +35,17 @@ func main() {
 }
 
 func merge(nums1 []int, m int, nums2 []int, n int)  {
+  nums1Index := 0
+	for i := 0; i < len(nums2); i++ {
+    for j := nums1Index; j < len(nums1); j++ {
+      if nums1[j] > nums2[i] {
+        // shift nums1 elements one up from index j, and insert nums2[i] at nums1[j]
+        shift(nums2, j)
+      }
+    }
+	}
+}
+
+func shift(arr []int, i int) {
 
 }
