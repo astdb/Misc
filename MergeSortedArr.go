@@ -1,4 +1,5 @@
-/*Given two sorted integer arrays nums1 and nums2, merge nums2 into nums1 as one sorted array.
+/*
+Given two sorted integier arrays nums1 and nums2, merge nums2 into nums1 as one sorted array.
 
 Note:
 
@@ -41,11 +42,19 @@ func merge(nums1 []int, m int, nums2 []int, n int)  {
       if nums1[j] > nums2[i] {
         // shift nums1 elements one up from index j, and insert nums2[i] at nums1[j]
         shift(nums2, j)
+        nums1[j] = nums2[i]
+        nums1Index = j+1
       }
     }
 	}
 }
 
 func shift(arr []int, i int) {
+  j := len(arr)-2
 
+  for j >= i {
+    arr[j+1] = arr[j]
+    j--
+  }
 }
+
