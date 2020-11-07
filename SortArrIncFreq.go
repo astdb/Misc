@@ -25,8 +25,8 @@ Output: [5,-1,4,4,-6,-6,1,1,1]
 package main
 
 import (
-  "log"
-  "sort"
+	"log"
+	"sort"
 )
 
 func main() {
@@ -38,7 +38,77 @@ func main() {
 }
 
 func frequencySort(nums []int) []int {
-	// build map of nums element frequencies
+	freqs := map[int]int{}
+
+	for _, n := range nums {
+		_, ok := freqs[n]
+
+		if ok {
+			freqs[n]++
+		} else {
+			freqs[n] = 1
+		}
+	}
+
+	freqMap := map[int]bool{}
+	// dupFreq := false
+
+	numFreqList := []*NumFreq{}
+	for num, freq := range freqs {
+		numFreqList = append(numFreqList, &NumFreq{Num: num, Freq: freq})
+
+		_, ok := freqMap[freq]
+		if ok {
+			// repeated num frequency
+			// dupFreq = true
+		} else {
+			freqMap[freq] = true
+		}
+	}
+
+	sort.Slice(numFreqList, func(i, j int) bool {
+		if numFreqList[i].Freq == numFreqList[j].Freq {
+			return numFreqList[i].Num > numFreqList[j].Num
+		}
+
+		return numFreqList[i].Freq < numFreqList[j].Freq
+	})
+
+	/* if dupFreq {
+		// sort decreasing order of frequency
+		sort.Slice(numFreqList, func(i, j int) bool {
+			return numFreqList[i].Freq > numFreqList[j].Freq
+		})
+
+	} else {
+		// sort increasing order of frequency
+		sort.Slice(numFreqList, func(i, j int) bool {
+			return numFreqList[i].Freq < numFreqList[j].Freq
+		})
+	} */
+
+	res := []int{}
+	for _, numFreq := range numFreqList {
+		num := numFreq.Num
+		freq := numFreq.Freq
+
+		for i := 0; i < freq; i++ {
+			res = append(res, num)
+		}
+	}
+
+	return res
+}
+
+type NumFreq struct {
+	Num  int
+	Freq int
+}
+
+// -----------------------------------------------
+
+func frequencySort1(nums []int) []int {
+	// build map of nums' element frequencies
 	freqs := map[int]int{}
 	keys := []int{} // make a list of keys
 
@@ -52,23 +122,35 @@ func frequencySort(nums []int) []int {
 		}
 	}
 
+	log.Printf("frequencySort(): nums: %v\n", nums)
+	log.Printf("frequencySort(): freqs: %v\n", freqs)
+	log.Printf("frequencySort(): keys: %v", keys)
+
+	// if multiple values are present..
 	if multValsInMap(freqs) {
+		// sort ascending
 		sort.Ints(keys)
 	} else {
+		// sort descending
 		// sort.Reverse(sort.Ints(keys))
-    sort.Sort(sort.Reverse(sort.IntSlice(keys)))
+		sort.Sort(sort.Reverse(sort.IntSlice(keys)))
 	}
 
+	// result placeholder
 	res := []int{}
 
+	// for each key (original nums element) in freqs map
 	for _, k := range keys {
+		// get count
 		keyNum := freqs[k]
 
+		// append that element in correct frequency to the result
 		for i := 0; i < keyNum; i++ {
 			res = append(res, k)
 		}
 	}
 
+	// return result
 	return keys
 }
 
