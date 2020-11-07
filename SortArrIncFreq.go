@@ -74,19 +74,6 @@ func frequencySort(nums []int) []int {
 		return numFreqList[i].Freq < numFreqList[j].Freq
 	})
 
-	/* if dupFreq {
-		// sort decreasing order of frequency
-		sort.Slice(numFreqList, func(i, j int) bool {
-			return numFreqList[i].Freq > numFreqList[j].Freq
-		})
-
-	} else {
-		// sort increasing order of frequency
-		sort.Slice(numFreqList, func(i, j int) bool {
-			return numFreqList[i].Freq < numFreqList[j].Freq
-		})
-	} */
-
 	res := []int{}
 	for _, numFreq := range numFreqList {
 		num := numFreq.Num
@@ -103,70 +90,4 @@ func frequencySort(nums []int) []int {
 type NumFreq struct {
 	Num  int
 	Freq int
-}
-
-// -----------------------------------------------
-
-func frequencySort1(nums []int) []int {
-	// build map of nums' element frequencies
-	freqs := map[int]int{}
-	keys := []int{} // make a list of keys
-
-	for _, num := range nums {
-		_, counted := freqs[num]
-		if counted {
-			freqs[num]++
-		} else {
-			freqs[num] = 1
-			keys = append(keys, num)
-		}
-	}
-
-	log.Printf("frequencySort(): nums: %v\n", nums)
-	log.Printf("frequencySort(): freqs: %v\n", freqs)
-	log.Printf("frequencySort(): keys: %v", keys)
-
-	// if multiple values are present..
-	if multValsInMap(freqs) {
-		// sort ascending
-		sort.Ints(keys)
-	} else {
-		// sort descending
-		// sort.Reverse(sort.Ints(keys))
-		sort.Sort(sort.Reverse(sort.IntSlice(keys)))
-	}
-
-	// result placeholder
-	res := []int{}
-
-	// for each key (original nums element) in freqs map
-	for _, k := range keys {
-		// get count
-		keyNum := freqs[k]
-
-		// append that element in correct frequency to the result
-		for i := 0; i < keyNum; i++ {
-			res = append(res, k)
-		}
-	}
-
-	// return result
-	return keys
-}
-
-// check if a given int->int map has multiples of the same value
-func multValsInMap(mp map[int]int) bool {
-	// interim map keyed by values in mp
-	valuesMap := map[int]bool{}
-	for _, v := range mp {
-		_, present := valuesMap[v]
-		if present {
-			// v has been seen before
-			return true
-		} else {
-			valuesMap[v] = true
-		}
-	}
-
-	return false
 }
