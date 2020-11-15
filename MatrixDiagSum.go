@@ -31,42 +31,57 @@ Output: 5
 package main
 
 import (
-  "log"
+	"log"
 )
 
 func main() {
-  tests := [][][]int{ {{1,2,3}, {4,5,6},{7,8,9}} }
+	tests := [][][]int{{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}}, {{1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}, {1, 1, 1, 1}}, {{5}}}
 
-  for _, test := range tests {
-     log.Printf("diagonalSum(%v) == %d\n", test, diagonalSum(test))
-  }
+	for _, test := range tests {
+		log.Printf("diagonalSum(%v) == %d\n", test, diagonalSum(test))
+	}
 }
 
 func diagonalSum(mat [][]int) int {
 	// add primary diagonal
+	// log.Printf("\tAdding primary diagonal..\n")
 	diagSum := 0
 
 	diagElemIdx := 0
 	for _, row := range mat {
 		if diagElemIdx < len(row) {
-      log.Println("\t", row[diagElemIdx])
+			// log.Printf("\t%dth row, %dth element (%d)", i, diagElemIdx, row[diagElemIdx])
 			diagSum += row[diagElemIdx]
 			diagElemIdx++
 		}
 	}
 
 	// add secondary diagonal
+	// log.Printf("\tAdding secondary diagonal..\n")
 	if len(mat) > 0 && len(mat[0]) > 0 {
 		diagElemIdx = len(mat[0]) - 1
 	}
 
-  for _, row := range mat {
-    if (diagElemIdx < len(row)) && (len(row) % 2 != 0) && (diagElemIdx != len(row) / 2) {
-      log.Println("\t", row[diagElemIdx])
-      diagSum += row[diagElemIdx]
-      diagElemIdx--
-    }
-  }
+	// if the matrix size is odd, leave out the len(mat) / 2th element of secondary diagonal
+	if len(mat)%2 == 0 {
+		for _, row := range mat {
+			if diagElemIdx >= 0 {
+				diagSum += row[diagElemIdx]
 
-  return diagSum
+			}
+
+			diagElemIdx--
+		}
+	} else {
+		for _, row := range mat {
+			if diagElemIdx >= 0 && diagElemIdx != len(row)/2 {
+				diagSum += row[diagElemIdx]
+
+			}
+
+			diagElemIdx--
+		}
+	}
+
+	return diagSum
 }
