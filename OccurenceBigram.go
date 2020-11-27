@@ -41,6 +41,21 @@ func main() {
 }
 
 func findOcurrences(text string, first string, second string) []string {
+	result := []string{}
+	textTokens := strings.Split(text, " ")
+
+	for i := 0; i < len(textTokens); i++ {
+		if (i + 2) < len(textTokens) {
+			if textTokens[i] == first && textTokens[i+1] == second {
+				result = append(result, textTokens[i+2])
+			}
+		}
+	}
+
+	return result
+}
+
+func findOcurrences2(text string, first string, second string) []string {
 	bigramMap := map[string][]string{}
 
 	textTokens := strings.Split(text, " ")
