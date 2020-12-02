@@ -53,6 +53,10 @@ func validMountainArray(arr []int) bool {
 	}
 
 	for i := 0; i < len(arr)-1; i++ {
+		if arr[i] == arr[i+1] {
+			return false
+		}
+
 		if !peaked {
 			if arr[i+1] <= arr[i] {
 				peaked = true
@@ -63,6 +67,10 @@ func validMountainArray(arr []int) bool {
 				return false
 			}
 		}
+	}
+
+	if !peaked {
+		return false
 	}
 
 	return true
