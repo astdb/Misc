@@ -3,7 +3,7 @@ You own a Goal Parser that can interpret a string command. The command consists 
 
 Given the string command, return the Goal Parser's interpretation of command.
 
-
+ 
 
 Example 1:
 
@@ -22,50 +22,47 @@ Example 3:
 
 Input: command = "(al)G(al)()()G"
 Output: "alGalooG"
-
+ 
 
 Constraints:
 
 1 <= command.length <= 100
 command consists of "G", "()", and/or "(al)" in some order.
+
 */
 
 package main
 
 import (
-	"log"
-	"strings"
+  "log"
+  "strings"
 )
 
 func main() {
-	tests := []string{"G()(al)", "G()()()()(al)", "(al)G(al)()()G"}
+  tests := []string{"", "G", "()", "(al)", "G()(al)","G()()()()(al)", "(al)G(al)()()G", "Goal"}
 
-	for _, test := range tests {
-		log.Printf("interpret(%s) = %s\n", test, interpret(test))
-	}
+  for _, test := range tests {
+    log.Printf("interpret(\"%s\") = %s\n", test, interpret(test))
+  }
 }
 
 func interpret(command string) string {
-	var res strings.Builder
+  cmdRunes := []rune(command)
 
-	// i := 0
-	commandRunes := []rune(command)
+  var result strings.Builder
+  for i := 0; i < len(cmdRunes); i++ {
+    if cmdRunes[i] == 'G' {
+     result.WriteString("G")
+ 
+    } else if string(cmdRunes[i:i+2]) == "()" {
+      result.WriteString("o")
+      i++
 
-	for i := 0; i < len(commandRunes); i++ {
-		if commandRunes[i] == 'G' {
-			res.WriteString("G")
-		} else if i+1 < len(commandRunes) {
-			if string(commandRunes[i:i+2]) == "()" {
-				res.WriteString("o")
-				i++
-			}
-		} else if i+3 < len(commandRunes) {
-			if string(commandRunes[i:i+4]) == "(al)" {
-				res.WriteString("(al)")
-				i += 3
-			}
-		}
-	}
+    } else if string(cmdRunes[i:i+4]) == "(al)" {
+      result.WriteString("al")
+      i += 3
+    }
+  }
 
-	return res.String()
+  return result.String()
 }
