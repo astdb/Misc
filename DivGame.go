@@ -45,15 +45,29 @@ func divisorGame(n int) bool {
   // Alice's first move
   // divisorFound, divisor := getDiv(n, )
 
+  log.Printf("N = %d\n", n)
+
   alice := true  // first turn Alice's
   for {
+    if alice {
+      log.Println("------------Alice's turn----------------")
+    } else {
+      log.Println("------------Bob's turn------------------")
+    }
+
     validMove, x := getX(n)
 
     if validMove {
+      log.Printf("Valid move - n (%d) is now set to x (%d)\n", n, x)
       n = x
     } else {
+      log.Println("Could not make a valid move")
       if !alice {
+        log.Println("Bob's turn (Alice won) - returning true")
         return true
+      } else {
+        log.Println("Alice's turn (Bob won) - returning false")
+        return false
       }
     }
 
@@ -68,7 +82,7 @@ func divisorGame(n int) bool {
 func getX(n int) (bool, int) {
   x := 0
   valid := false
-
+  
   for i := n-1; i > 0; i-- {
     if n % i == 0 {
       x = i
@@ -80,4 +94,3 @@ func getX(n int) (bool, int) {
 
   return valid, x
 }
-
