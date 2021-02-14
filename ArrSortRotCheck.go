@@ -51,7 +51,7 @@ import (
 )
 
 func main() {
-	tests := [][]int{nil, {}, {3, 4, 5, 1, 2}, {2, 1, 3, 4}, {1, 2, 3}, {1, 1, 1}, {2, 1}}
+	tests := [][]int{nil, {}, {3, 4, 5, 1, 2}, {2, 1, 3, 4}, {1, 2, 3}, {1, 1, 1}, {2, 1}, {3,2,1}}
 
 	for _, test := range tests {
 		log.Printf("check(%v) = %v\n", test, check(test))
@@ -71,7 +71,7 @@ func check(nums []int) bool {
 	rotated := false // flag indicating the array may have been rotated by omre than zero items
 
 	for i := 0; i < len(nums); i++ {
-		if i < len(nums)-2 {
+		if i < len(nums)-1 {
 			if nums[i] > nums[i+1] {
 				if !rotated {
 					rotated = true
