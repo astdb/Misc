@@ -1,5 +1,5 @@
 /*
-Given an NxN matrix, set each column and row to zero if any element within is zero.
+Given an NxM matrix, set each column and row to zero if any element within is zero.
 
 */
 
@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	tests := [][][]int{{{1, 2, 3, 4}, {5, 6, 0, 8}, {9, 0, 11, 12}, {13, 14, 15, 16}}}
+	tests := [][][]int{{{1, 2, 3, 4}, {5, 6, 0, 8}, {9, 10, 11, 12}, {13, 14, 15, 16}}, {{1,2,3,4,5},{6,7,0,9,10},{11,12,13,14,15}}}
 
 	for _, test := range tests {
 		log.Println("===================================================")
@@ -34,7 +34,7 @@ func zeroMatrix(mat [][]int) [][]int {
 	}
 
 	for i := 0; i < len(mat); i++ {
-		for j := 0; j < len(mat); j++ {
+		for j := 0; j < len(mat[i]); j++ {
 			if mat[i][0] == 0 || mat[0][j] == 0 {
 				mat[i][j] = 0
 			}
