@@ -10,14 +10,15 @@ package main
 import (
 	"fmt"
 	"log"
-  "strings"
+	"strings"
 )
 
 func main() {
-  testList := CreateList([]int{1,2,2,3,4,5})
-  PrintList(testList)
-  removeDups(testList)
-  PrintList(testList)
+	testList := CreateList([]int{1, 2, 2, 3, 4, 5})
+	PrintList(testList)
+	// removeDups(testList)
+	removeDups2(testList)
+	PrintList(testList)
 }
 
 func CreateList(vals []int) *ListNode {
@@ -30,7 +31,7 @@ func CreateList(vals []int) *ListNode {
 				// populate head
 				// list.Val = v
 				// list.Next = nil
-        list = getListNode(v, nil)
+				list = getListNode(v, nil)
 			} else {
 				// create new list node and insert after head start
 				node := getListNode(v, list.Next)
@@ -42,6 +43,37 @@ func CreateList(vals []int) *ListNode {
 	}
 
 	return list
+}
+
+// iterate list from start
+// for every node, scan the rest of the list in front and remove any similar nodes
+func removeDups2(list *ListNode) *ListNode {
+	// save reference to list head
+	listRef := list
+
+	for list != nil {
+		// reference to current node
+		curNode := list
+		curVal := curNode.Val
+
+		// iterate through the rest of the list
+		prevNode := curNode
+		curNode = curNode.Next
+		for curNode != nil {
+			if curNode.Val == curVal {
+				// remove curNode
+				prevNode.Next = curNode.Next
+			}
+
+			prevNode = curNode
+			curNode = curNode.Next
+
+		}
+
+		list = list.Next
+	}
+
+	return listRef
 }
 
 func removeDups(list *ListNode) *ListNode {
@@ -86,7 +118,7 @@ func PrintList(list *ListNode) {
 			sb.WriteString(fmt.Sprintf(", %d", list.Val))
 		}
 
-    list = list.Next
+		list = list.Next
 	}
 
 	sb.WriteString("]")
