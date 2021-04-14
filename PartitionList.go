@@ -17,19 +17,27 @@ func main() {
 
 func partitionList(val int, list *List) *List {
 	// create new list, with partition key as head node
-	partList := CreateList()
+	partList := CreateList([]int{val})
 
 	// save external reference to partition key node
+	partKeyNode := partList.Head
 
 	// iterate through list
-	{
+	it := list.Head
+	for it != nil {
 		// if value < partition, insert at list head. 
+		if it.Val < partKeyNode.Val {
+			list.InsertHead(it.Val)
+		} else {
+			// if value > partition, insert at end of list.
+			list.InsertTail(it.Val)
+		}		
 
-		// if value > partition, insert at end of list.
-
+		it = it.Next
 	}
 
 	// return partitioned list
+	return partList
 }
 
 func PrintList(list *List) {
@@ -75,17 +83,29 @@ func CreateList(listVals []int) *List {
 
 type List struct {
 	Head *ListNode
+	Tail *ListNode
 }
 
-// func (r *robot) Action(commandLine string) error {
 func (l *List) Insert(v int) {
 	newNode := NewNode(v, l.Head.Next)
 	l.Head.Next = newNode
 }
 
+// insert new node at the head of the list, and update head
+func (l *List) InsertHead(v int) {
+	newNode := NewNode(v, l.Head)
+	l.Head = newNode
+}
+
+// insert new node at the end of the list
+func (l *List) InsertHead(v int) {
+	newNode := NewNode(v, l.Head)
+	l.Head = newNode
+
 func NewList(head int) *List {
 	var list List
 	list.Head = NewNode(head, nil)
+	list.Tail = list.Head
 	return &list
 }
 
