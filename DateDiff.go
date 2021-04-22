@@ -1,7 +1,7 @@
 package main
 
 import (
-	// "log"
+	"log"
 )
 
 var MONTH_DAYS = map[int]int{
@@ -20,14 +20,9 @@ var MONTH_DAYS = map[int]int{
 }
 
 func main() {
-
+  // log.Println(dateDiff(1,4,2021,30,4,2021))
+  log.Println(dateDiff(12, 8, 2013, 13, 9, 2014))
 }
-
-// https://stackoverflow.com/questions/25816616/claculate-the-number-of-days-between-two-dates-without-libraries
-// func diff(startDay, startMonth, startYear, endDay, endMonth, endYear int) int {
-// 	res := (startYear - endYear) * 365
-// 	// res +=
-// }
 
 func dateDiff(d1, m1, y1, d2, m2, y2 int) int {
 	// TODO: check if second date is after first date
@@ -104,29 +99,12 @@ func dateDiff(d1, m1, y1, d2, m2, y2 int) int {
 
 // return number of days in a given month (1-12) and year
 func daysMonth(m, y int) int {
-	// TODO: check input
-	// var MONTH_DAYS = map[int]int{
-	// 	1:  31,
-	// 	2:  28,
-	// 	3:  31,
-	// 	4:  30,
-	// 	5:  31,
-	// 	6:  30,
-	// 	7:  31,
-	// 	8:  31,
-	// 	9:  30,
-	// 	10: 31,
-	// 	11: 30,
-	// 	12: 31,
-	// }
-
-	// var days int
-
 	// handle feb
 	if m == 2 && leap(y) {
 		return 29
 	}
 
+  // other months
   return MONTH_DAYS[m]
 }
 
