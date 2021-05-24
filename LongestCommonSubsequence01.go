@@ -41,7 +41,7 @@ import (
 )
 
 func main() {
-	tests := [][]string{{"aba", "cdc"}, {"aaa", "bbb"}, {"aaa", "aaa"}}
+	tests := [][]string{{"aba", "cdc"}, {"aaa", "bbb"}, {"aaa", "aaa"}, {"aefawfawfawfaw", "aefawfeawfwafwaef"}}
 	for _, test := range tests {
 		log.Printf("findLUSlength(%s, %s) == %d\n", test[0], test[1], findLUSlength(test[0], test[1]))
 	}
@@ -50,10 +50,10 @@ func main() {
 // per substring of a, if its a substring of b
 // if yes, ignore. if not, check if length > current longest uncommon substr - update if longer
 // return longest uncommon subsr length
-// optimization: start searching from longest possible substrings (e.g. len(b) if len(b) < len(a), else len(a))
+// optimization: start searching from longest possible substring of the longer string (e.g. len(b) if len(b) >= len(a), else len(a))
 func findLUSlength(a string, b string) int {
 	var subStrLen int
-	if len(b) < len(a) {
+	if len(b) >= len(a) {
 		subStrLen = len(b)
 	} else {
 		subStrLen = len(a)
@@ -62,13 +62,22 @@ func findLUSlength(a string, b string) int {
 	var longestSubstrLen int = -1
 
 	for subStrLen > 0 {
-		// get all substrings of a of subStrlen
-		subStrs := getAllSubStrs(a, subStrLen)
+		// if subStrLen > len(a), longest uncommon substring length can be considerend as subStrLen
+		if subStrLen > len(a) {
+			if subStrLen > longestSubstrLen {
+				longestSubstrLen = subStrLen
+        return longestSubstrLen
+			}
+		} else {
+			// get all substrings of a of subStrlen
+			subStrs := getAllSubStrs(a, subStrLen)
 
-		for _, subStr := range subStrs {
-			if !strings.Contains(b, subStr) {
-				if len(subStr) > longestSubstrLen {
-					longestSubstrLen = len(subStr)
+			for _, subStr := range subStrs {
+				if !strings.Contains(b, subStr) {
+					if len(subStr) > longestSubstrLen {
+						longestSubstrLen = len(subStr)
+            return longestSubstrLen
+					}
 				}
 			}
 		}
