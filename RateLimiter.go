@@ -1,5 +1,6 @@
 /*
-Imagine we are building an application that is used by many different customers. We want to avoid one customer being able to overload the system by sending too many requests, so we enforce a per-customer rate limit. The rate limit is defined as:
+Imagine we are building an application that is used by many clients. We want to avoid any one client being able to
+overload the system by sending too many requests, so we enforce a per-customer rate limit. The rate limit is defined as:
 
 “Each customer can make X requests per Y seconds”
 
@@ -18,17 +19,23 @@ var requestRates map[int]map[int]int{}
 
 This maps a client ID to another map storing unix second to requests made within that second.
 
-When a request comes in, check if the client ID is present in requestRates. If so, retrieve the second -> request map for it; if not, insert client ID with current second mapping to a req count of one.
+When a request comes in, check if the client ID is present in requestRates. If so, retrieve the
+second -> request map for it; if not, insert client ID with current second mapping to a req count of one.
 
-Check if the second in the second map is the current second. If yes, increment it, if not add current second to it with a request count of one. Check if req count exceeds the rate limit, and return appropriate value.
+Check if the second in the second map is the current second. If yes, increment it, if not add current
+second to it with a request count of one. Check if req count exceeds the rate limit, and return appropriate value.
 
-This could result in the inner map structure mapped to by the client ID key growing to thousands of entries for busy periods. This could be replaced by the below simpler requestRates structure.
+This could result in the inner map structure mapped to by the client ID key growing to thousands of entries
+for busy periods. This could be replaced by the below simpler requestRates structure.
 
 var requestRates map[int][]int{}
 
-In this version, the client ID points to an int slice. This slice only needs to have two elements: one for then Unix second and another for the number of requests made in that second.
+In this version, the client ID points to an int slice. This slice only needs to have two elements: one
+for then Unix second and another for the number of requests made in that second.
 
-When a request comes in the program would retrieve the second/req slice by client ID. Then it would check if the first element is the current second and update the seconds count if so. Else it’ll overwrite the first element with the current second and reset req count to one.
+When a request comes in the program would retrieve the second/req slice by client ID. Then it would check if
+the first element is the current second and update the seconds count if so. Else it’ll overwrite the first element
+with the current second and reset req count to one.
 
 */
 
@@ -39,8 +46,8 @@ import (
 	"time"
 )
 
-// data structure storing number of requets made by specific clients
-// maps a client ID to another map storing a unix second and requests made within that second.
+// REQ_RATES tracks number of API requests made per client ID.
+// It maps a client ID to a struct storing a Unix second and requests made within that second.
 var REQ_RATES map[int]*SecReq
 
 // number of requests a client allowed to make per second
@@ -53,8 +60,9 @@ func main() {
 func rateLimit(custID int) bool {
 	var limit bool
 
-	// check if client ID present in REQ_RATES
+	// check if this client ID is present in REQ_RATES
 	secReqs, present := REQ_RATES[custID]
+
 	if !present {
 		// customer ID not found in req rates - initialize
 		REQ_RATES[custID] = &SecReq{Sec: time.Now().Unix(), Reqs: 1}
@@ -105,7 +113,7 @@ func rateLimit(custID int) bool {
 	return limit
 }
 
-// struct mapping count of requests made in a given UNIX second
+// struct type mapping count of requests made in a given UNIX second
 type SecReq struct {
 	Sec  int64
 	Reqs int64
